@@ -90,14 +90,18 @@ main :: proc() {
     }
 }
 
-hex_tile_angle : f32 = 60
+hex_tile_angle: f32 = 60
+hex_tile_size := rl.Vector2{1.75, 1.5}
 
 draw_board :: proc(tile_model: rl.Model) {
     for x in 0..<10 {
         for y in 0..<10 {
-            pos := rl.Vector3{f32(x), -5, f32(y)}
+            pos := rl.Vector3{hex_tile_size.x * f32(x), -5, hex_tile_size.y * f32(y)}
             if y % 2 == 1 {
-                pos.x += 0.5
+                pos.x += hex_tile_size.x / 2
+            }
+            if abs(x - y) <= 1 {
+                pos.y += 1
             }
             rl.DrawModelEx(tile_model, pos, {0, 1, 0}, hex_tile_angle, 1, rl.BLUE)
             rl.DrawModelWiresEx(tile_model, pos, {0, 1, 0}, hex_tile_angle, 1, rl.WHITE)
