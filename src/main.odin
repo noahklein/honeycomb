@@ -50,9 +50,12 @@ main :: proc() {
     // camera = rl.Camera2D{ zoom = 1, offset = rlutil.screen_size() / 2 }
     camera = rl.Camera{
         projection = .PERSPECTIVE, fovy = 90,
-        position = -5, up = {0, 1, 0},
-        target = {0, 2, 0},
+        position = {0, 0, -10}, up = {0, 1, 0},
+        target = {0, 0, 0},
     }
+
+    hex_tile_model := rl.LoadModel("assets/hex-tile.glb")
+    defer rl.UnloadModel(hex_tile_model)
 
     ngui.init()
     defer ngui.deinit()
@@ -64,7 +67,6 @@ main :: proc() {
         defer free_all(context.temp_allocator)
 
         dt := rl.GetFrameTime() * timescale
-        // cursor := rl.GetScreenToWorld2D(rl.GetMousePosition(), camera)
 
         if rl.IsMouseButtonPressed(.RIGHT) {
             if rl.IsCursorHidden() do rl.EnableCursor()
@@ -81,25 +83,25 @@ main :: proc() {
         rl.ClearBackground(rl.BROWN)
 
         rl.BeginMode3D(camera)
-            draw_cubes()
+            draw_board(hex_tile_model)
         rl.EndMode3D()
 
         draw_gui(&camera)
     }
 }
 
-Cube :: struct {
-    pos, size: rl.Vector3,
-    color: rl.Color,
-}
-cubes :: [?]Cube{
-    {0, 1, rl.BLUE},
-    {2, {2, 1, 4}, rl.YELLOW},
-}
+hex_tile_angle : f32 = 60
 
-draw_cubes :: proc() {
-    for cube in cubes {
-        rl.DrawCubeV(cube.pos, cube.size, cube.color)
+draw_board :: proc(tile_model: rl.Model) {
+    for x in 0..<10 {
+        for y in 0..<10 {
+            pos := rl.Vector3{f32(x), -5, f32(y)}
+            if y % 2 == 1 {
+                pos.x += 0.5
+            }
+            rl.DrawModelEx(tile_model, pos, {0, 1, 0}, hex_tile_angle, 1, rl.BLUE)
+            rl.DrawModelWiresEx(tile_model, pos, {0, 1, 0}, hex_tile_angle, 1, rl.WHITE)
+        }
     }
 }
 

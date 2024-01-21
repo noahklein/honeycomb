@@ -1,7 +1,10 @@
 package main
 
+import "core:time"
 import rl "vendor:raylib"
+
 import "ngui"
+import "rlutil"
 
 tmp_vec2: rl.Vector2
 
@@ -18,6 +21,18 @@ draw_gui :: proc(camera: ^rl.Camera) {
 
             ngui.vec3(&camera.position, label = "Position")
         }
+
+        if ngui.flex_row({0.2}) {
+            ngui.float(&hex_tile_angle, -180, 180, label = "Hex tile angle")
+        }
+
+        if ngui.flex_row({1}) {
+            if ngui.graph_begin("Time", 256, lower = 0, upper = f32(time.Second) / 60) {
+                ngui.graph_line("Update", rlutil.profile_duration("update"), rl.SKYBLUE)
+                ngui.graph_line("Draw", rlutil.profile_duration("draw"), rl.RED)
+            }
+        }
     }
 
+    rl.DrawFPS(rl.GetScreenWidth() - 80, 0)
 }
