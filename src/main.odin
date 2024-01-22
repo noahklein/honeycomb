@@ -6,6 +6,7 @@ import "core:mem"
 
 import rl "vendor:raylib"
 
+import "hex"
 import "ngui"
 import "rlutil"
 
@@ -92,18 +93,13 @@ hex_tile_size := rl.Vector2{linalg.SQRT_THREE, 1.5}
 
 draw_board :: proc() {
     rl.DrawLine3D({0, 1, 0}, {5, 1, 0}, rl.RED)
-    for x in 0..<10 {
-        for y in 0..<10 {
-            pos := rl.Vector3{hex_tile_size.x * f32(x), -2, hex_tile_size.y * f32(y)}
-            if y % 2 == 1 {
-                pos.x += hex_tile_size.x / 2
-            }
 
-            is_elevated := abs(x - y) <= 1
-            if is_elevated {
-                pos.y += 1
-            }
-            rl.DrawCylinder     (pos, 1, 1, 1, 6, rl.BLUE if is_elevated else rl.BROWN)
+    for q in 0..<10 {
+        for r in 0..<10 {
+            point := hex.hex_to_world(hex.layout, hex.hex(q, r))
+            pos := rl.Vector3{point.x, 0, point.y}
+
+            rl.DrawCylinder     (pos, 1, 1, 1, 6, rl.BLUE)
             rl.DrawCylinderWires(pos, 1, 1, 1, 6, rl.WHITE)
         }
     }
