@@ -26,6 +26,7 @@ POINTY :: Orientation{
     start_angle = 0.5,
 }
 
+@(require_results)
 hex_to_world :: proc(layout: Layout, hex: Hex) -> rl.Vector2 {
     M := layout.orientation.forward
     h := linalg.array_cast(hex, f32)
@@ -38,6 +39,7 @@ hex_to_world :: proc(layout: Layout, hex: Hex) -> rl.Vector2 {
 
 FractionalHex :: distinct [3]f32
 
+@(require_results)
 world_to_hex :: proc(layout: Layout, point: rl.Vector2) -> FractionalHex {
     M := layout.orientation.inverse
     pt := (point - layout.origin) / layout.size

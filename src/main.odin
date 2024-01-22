@@ -56,6 +56,10 @@ main :: proc() {
         target = 2,
     }
 
+    hex_map: hex.Map
+    hex.map_gen_hexagon(&hex_map, 3)
+    defer delete(hex_map)
+
     ngui.init()
     defer ngui.deinit()
 
@@ -82,7 +86,7 @@ main :: proc() {
         rl.ClearBackground(rl.BLACK)
 
         rl.BeginMode3D(camera)
-            draw_board()
+            draw_board(hex_map)
         rl.EndMode3D()
 
         draw_gui(&camera)
@@ -91,8 +95,18 @@ main :: proc() {
 
 hex_tile_size := rl.Vector2{linalg.SQRT_THREE, 1.5}
 
-draw_board :: proc() {
+draw_board :: proc(hex_map: hex.Map) {
     rl.DrawLine3D({0, 1, 0}, {5, 1, 0}, rl.RED)
+
+    for h in hex_map {
+        point := hex.hex_to_world(hex.layout, h)
+        pos := rl.Vector3{point.x, 0, point.y}
+
+        rl.DrawCylinder     (pos, 1, 1, 1, 6, rl.BLUE)
+        rl.DrawCylinderWires(pos, 1, 1, 1, 6, rl.WHITE)
+    }
+
+    if true do return
 
     for q in 0..<10 {
         for r in 0..<10 {

@@ -3,6 +3,7 @@ package main
 import "core:time"
 import rl "vendor:raylib"
 
+import "hex"
 import "ngui"
 import "rlutil"
 
@@ -16,6 +17,11 @@ draw_gui :: proc(camera: ^rl.Camera) {
             ngui.float(&camera.fovy, min = 20, max = 160, label = "Fovy")
             ngui.vec3(&camera.position, label = "Position")
             ngui.vec3(&camera.target, label = "Target")
+        }
+
+        if ngui.flex_row({0.2}) {
+            ngui.vec2(&hex.layout.size, 1, 5, label = "Grid Size")
+
         }
 
         if ngui.flex_row({1}) {
