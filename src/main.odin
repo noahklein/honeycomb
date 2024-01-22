@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:math/linalg"
 import "core:mem"
 
 import rl "vendor:raylib"
@@ -50,12 +51,9 @@ main :: proc() {
     // camera = rl.Camera2D{ zoom = 1, offset = rlutil.screen_size() / 2 }
     camera = rl.Camera{
         projection = .PERSPECTIVE, fovy = 90,
-        position = {0, 0, -10}, up = {0, 1, 0},
-        target = {0, 0, 0},
+        position = {0, 5, -1}, up = {0, 1, 0},
+        target = 2,
     }
-
-    hex_tile_model := rl.LoadModel("assets/hex-tile.glb")
-    defer rl.UnloadModel(hex_tile_model)
 
     ngui.init()
     defer ngui.deinit()
@@ -80,31 +78,33 @@ main :: proc() {
         rlutil.profile_begin("draw")
         rl.BeginDrawing()
         defer rl.EndDrawing()
-        rl.ClearBackground(rl.BROWN)
+        rl.ClearBackground(rl.BLACK)
 
         rl.BeginMode3D(camera)
-            draw_board(hex_tile_model)
+            draw_board()
         rl.EndMode3D()
 
         draw_gui(&camera)
     }
 }
 
-hex_tile_angle: f32 = 60
-hex_tile_size := rl.Vector2{1.75, 1.5}
+hex_tile_size := rl.Vector2{linalg.SQRT_THREE, 1.5}
 
-draw_board :: proc(tile_model: rl.Model) {
+draw_board :: proc() {
+    rl.DrawLine3D({0, 1, 0}, {5, 1, 0}, rl.RED)
     for x in 0..<10 {
         for y in 0..<10 {
-            pos := rl.Vector3{hex_tile_size.x * f32(x), -5, hex_tile_size.y * f32(y)}
+            pos := rl.Vector3{hex_tile_size.x * f32(x), -2, hex_tile_size.y * f32(y)}
             if y % 2 == 1 {
                 pos.x += hex_tile_size.x / 2
             }
-            if abs(x - y) <= 1 {
+
+            is_elevated := abs(x - y) <= 1
+            if is_elevated {
                 pos.y += 1
             }
-            rl.DrawModelEx(tile_model, pos, {0, 1, 0}, hex_tile_angle, 1, rl.BLUE)
-            rl.DrawModelWiresEx(tile_model, pos, {0, 1, 0}, hex_tile_angle, 1, rl.WHITE)
+            rl.DrawCylinder     (pos, 1, 1, 1, 6, rl.BLUE if is_elevated else rl.BROWN)
+            rl.DrawCylinderWires(pos, 1, 1, 1, 6, rl.WHITE)
         }
     }
 }
@@ -117,6 +117,9 @@ camera_movement :: proc(camera: ^rl.Camera, dt: f32) {
     strafe  := int(rl.IsKeyDown(.D) || rl.IsKeyDown(.RIGHT)) - int(rl.IsKeyDown(.A) || rl.IsKeyDown(.LEFT))
     movement := dt * CAM_MOVE * rl.Vector3{ f32(forward), f32(strafe), 0 }
 
-    rot := dt * CAM_ROT * rl.GetMouseDelta()
+    rot: rl.Vector2
+    if rl.IsCursorHidden() {
+        rot = dt * CAM_ROT * rl.GetMouseDelta()
+    }
     rl.UpdateCameraPro(camera, movement, {rot.x, rot.y, 0}, rl.GetMouseWheelMove() * 2)
 }
