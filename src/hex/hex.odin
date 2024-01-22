@@ -14,20 +14,24 @@ DIRECTIONS := [Direction]Hex{
 
 direction :: #force_inline proc(dir: Direction) -> Hex { return DIRECTIONS[dir] }
 
+@(require_results)
 hex :: proc(q, r: int) -> Hex {
     h := Hex{q, r, -q-r}
     assert(h.x + h.y + h.z == 0, "q + r + s != 0")
     return h
 }
 
+@(require_results)
 length :: proc(h: Hex) -> int {
     return (abs(h.x) + abs(h.y) + abs(h.z)) / 2
 }
 
+@(require_results)
 distance :: proc(a, b: Hex) -> int {
     return length(a - b)
 }
 
+@(require_results)
 neighbor :: proc(h: Hex, dir: Direction) -> Hex {
     return h + direction(dir)
 }

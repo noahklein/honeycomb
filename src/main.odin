@@ -6,6 +6,7 @@ import "core:mem"
 
 import rl "vendor:raylib"
 
+import "fight"
 import "hex"
 import "ngui"
 import "rlutil"
@@ -57,8 +58,14 @@ main :: proc() {
     }
 
     hex_map: hex.Map
-    hex.map_gen_hexagon(&hex_map, 3)
+    hex.map_gen_hexagon(&hex_map, 10)
     defer delete(hex_map)
+
+    fight.init()
+    defer fight.deinit()
+    append(&fight.fighters, fight.Fighter{ moves_remaining = 3})
+    fight.legal_moves(hex_map, 0)
+    fight.path_finding(hex_map, 0)
 
     ngui.init()
     defer ngui.deinit()
@@ -76,8 +83,14 @@ main :: proc() {
             else do rl.DisableCursor()
         }
 
+        hovered_tile: hex.Hex
         if rlutil.profile_begin("update") {
             camera_movement(&camera, dt)
+
+            ray := rl.GetMouseRay(rl.GetMousePosition(), camera)
+            if hovered, ok := get_hovered_tile(hex_map, ray); ok {
+                hovered_tile = hovered
+            }
         }
 
         rlutil.profile_begin("draw")
@@ -86,7 +99,7 @@ main :: proc() {
         rl.ClearBackground(rl.BLACK)
 
         rl.BeginMode3D(camera)
-            draw_board(hex_map)
+            draw_board(hex_map, hovered_tile)
         rl.EndMode3D()
 
         draw_gui(&camera)
@@ -95,27 +108,25 @@ main :: proc() {
 
 hex_tile_size := rl.Vector2{linalg.SQRT_THREE, 1.5}
 
-draw_board :: proc(hex_map: hex.Map) {
-    rl.DrawLine3D({0, 1, 0}, {5, 1, 0}, rl.RED)
-
+draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
     for h in hex_map {
         point := hex.hex_to_world(hex.layout, h)
         pos := rl.Vector3{point.x, 0, point.y}
 
-        rl.DrawCylinder     (pos, 1, 1, 1, 6, rl.BLUE)
+
+        color := rl.RED if h in fight.paths.legal else rl.BLUE
+        if hovered == h {
+            color = rl.YELLOW
+        }
+        rl.DrawCylinder     (pos, 1, 1, 1, 6, color)
         rl.DrawCylinderWires(pos, 1, 1, 1, 6, rl.WHITE)
     }
 
-    if true do return
+    for fighter in fight.fighters {
+        point := hex.hex_to_world(hex.layout, fighter.hex)
+        pos := rl.Vector3{point.x, 1.5, point.y}
 
-    for q in 0..<10 {
-        for r in 0..<10 {
-            point := hex.hex_to_world(hex.layout, hex.hex(q, r))
-            pos := rl.Vector3{point.x, 0, point.y}
-
-            rl.DrawCylinder     (pos, 1, 1, 1, 6, rl.BLUE)
-            rl.DrawCylinderWires(pos, 1, 1, 1, 6, rl.WHITE)
-        }
+        rl.DrawSphere(pos, 0.5, rl.GREEN)
     }
 }
 
@@ -132,4 +143,26 @@ camera_movement :: proc(camera: ^rl.Camera, dt: f32) {
         rot = dt * CAM_ROT * rl.GetMouseDelta()
     }
     rl.UpdateCameraPro(camera, movement, {rot.x, rot.y, 0}, rl.GetMouseWheelMove() * 2)
+}
+
+@(require_results)
+get_hovered_tile :: proc(hex_map: hex.Map, ray: rl.Ray) -> (hex.Hex, bool) {
+    // Get point of impact with mouse ray and a plane with y = 1.
+    ray := rl.GetMouseRay(rl.GetMousePosition(), camera)
+    plane_collision := rl.GetRayCollisionQuad(ray,
+        {-500, 1, -500},
+        { 500, 1, -500},
+        { 500, 1,  500},
+        {-500, 1,  500},
+    )
+
+    if plane_collision.hit {
+        // Convert the plane collision point to hex coordinates.
+        frac := hex.world_to_hex(hex.layout, plane_collision.point.xz)
+        h := hex.fractional_to_hex(frac)
+
+        return h, h in hex_map
+    }
+
+    return 0, false
 }

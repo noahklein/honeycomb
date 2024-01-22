@@ -37,7 +37,7 @@ hex_to_world :: proc(layout: Layout, hex: Hex) -> rl.Vector2 {
     return {x, y}*layout.size + layout.origin
 }
 
-FractionalHex :: distinct [3]f32
+FractionalHex :: rl.Vector3
 
 @(require_results)
 world_to_hex :: proc(layout: Layout, point: rl.Vector2) -> FractionalHex {
@@ -48,4 +48,24 @@ world_to_hex :: proc(layout: Layout, point: rl.Vector2) -> FractionalHex {
     r := M.z*pt.x + M.w*pt.y
 
     return {q, r, -q-r}
+}
+
+fractional_to_hex :: proc(frac: FractionalHex) -> Hex {
+    rounded : FractionalHex
+    for elem, i in frac {
+        rounded[i] = linalg.round(elem)
+    }
+
+    diff := linalg.abs(rounded - frac)
+
+    h := Hex(linalg.array_cast(rounded, int))
+    if diff.x > diff.y && diff.x > diff.z {
+        h.x = -h.y - h.z
+    } else if diff.y > diff.z {
+        h.y = -h.x - h.z
+    } else {
+        h.z = -h.x - h.y
+    }
+
+    return h
 }
