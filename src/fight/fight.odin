@@ -3,12 +3,12 @@ package fight
 import "core:container/queue"
 import "../hex"
 
-side_to_move: Team
-
-active_fighter: int
-fighters: [dynamic]Fighter
-
 level: hex.Map
+side_to_move: Team
+fighters: [dynamic]Fighter
+active_fighter: int
+
+deck: Deck
 
 MOVES :: 4
 
@@ -23,6 +23,8 @@ Team :: enum u8 { Blue, Red }
 init :: proc() {
     hex.map_gen_hexagon(&level, 10)
     hex.map_randomize(&level)
+
+    deck_random(&deck, 20)
 }
 
 deinit :: proc() {
@@ -33,6 +35,8 @@ deinit :: proc() {
     delete(paths.came_from)
     delete(paths.path)
     queue.destroy(&paths.queue)
+
+    deck_deinit(deck)
 }
 
 end_turn :: proc() {

@@ -59,8 +59,6 @@ main :: proc() {
         target = 2,
     }
 
-
-
     fight.init()
     defer fight.deinit()
     append(&fight.fighters,
@@ -112,6 +110,7 @@ main :: proc() {
 
             if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
             if rl.IsKeyPressed(.SPACE) do fight.end_turn()
+            if rl.IsKeyPressed(.R) do fight.deck_draw(&fight.deck)
         }
 
         if rlutil.profile_begin("draw") {
@@ -123,6 +122,7 @@ main :: proc() {
                 draw_board(fight.level, hovered_tile)
             rl.EndMode3D()
 
+            draw_cards_ui(fight.deck)
             draw_gui(&camera)
         }
     }
@@ -188,4 +188,45 @@ get_hovered_tile :: proc(hex_map: hex.Map, ray: rl.Ray) -> (hex.Hex, bool) {
     frac := hex.world_to_hex(plane_collision_point.xz)
     h := hex.fractional_to_hex(frac)
     return h, h in hex_map
+}
+
+CARD_WIDTH  :: 86
+CARD_HEIGHT :: CARD_WIDTH * 1.4
+
+draw_cards_ui :: proc(deck: fight.Deck) {
+    draw_deck_ui(10, len(deck.cards), rl.LIGHTGRAY)
+    draw_deck_ui(f32(rl.GetScreenWidth() - CARD_WIDTH - 10), len(deck.graveyard), rl.LIGHTGRAY)
+
+    hand_size := f32(len(deck.hand))
+    x := f32(rl.GetScreenWidth())/2 - hand_size*CARD_WIDTH / 2
+    y := f32(rl.GetScreenHeight()) - CARD_HEIGHT - 5
+
+    for card_id in deck.hand {
+        rec := rl.Rectangle{x, y, CARD_WIDTH, CARD_HEIGHT}
+        rl.DrawRectangleRec(rec, CARD_COLORS[card_id])
+        rl.DrawRectangleLinesEx(rec, 2, rl.BLACK)
+
+        {
+            // Label
+            label := fmt.ctprintf("%v", card_id)
+            ngui.text_rect(rec, label, rl.BLACK, align = .Center)
+        }
+
+        x += CARD_WIDTH
+    }
+}
+
+draw_deck_ui :: proc(x: f32, count: int, color: rl.Color) {
+    deck_rect := rl.Rectangle{
+        x, f32(rl.GetScreenHeight()) - CARD_HEIGHT - 5,
+        CARD_WIDTH, CARD_HEIGHT,
+    }
+    rl.DrawRectangleRec(deck_rect, color)
+    ngui.text_rect(deck_rect, fmt.ctprintf("%v", count), align = .Center)
+}
+
+// @TEMP
+CARD_COLORS := [fight.CardId]rl.Color {
+    .Warrior = rl.YELLOW,
+    .Archer  = rl.ORANGE,
 }
