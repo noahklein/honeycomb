@@ -4,7 +4,6 @@ import "core:container/queue"
 import "../hex"
 
 side_to_move: Team
-turn: int
 
 active_fighter: int
 fighters: [dynamic]Fighter
