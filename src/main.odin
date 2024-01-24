@@ -59,16 +59,16 @@ main :: proc() {
         target = 2,
     }
 
-    hex_map: hex.Map
-    defer delete(hex_map)
-    hex.map_gen_hexagon(&hex_map, 10)
-    hex.map_randomize(&hex_map)
+
 
     fight.init()
     defer fight.deinit()
-    append(&fight.fighters, fight.Fighter{ moves_remaining = 8})
-    fight.legal_moves(hex_map, 0)
-    fight.path_finding(hex_map, 0)
+    append(&fight.fighters,
+        fight.Fighter{ team = .Blue, hex = hex.hex( 0,  0), moves_remaining = fight.MOVES },
+        fight.Fighter{ team = .Blue, hex = hex.hex(-3, -1), moves_remaining = fight.MOVES },
+        fight.Fighter{ team = .Red,  hex = hex.hex(-2,  3), moves_remaining = fight.MOVES },
+        fight.Fighter{ team = .Red,  hex = hex.hex( 4,  3), moves_remaining = fight.MOVES },
+    )
 
     ngui.init()
     defer ngui.deinit()
@@ -81,7 +81,7 @@ main :: proc() {
 
         dt := rl.GetFrameTime() * timescale
 
-        if rl.IsMouseButtonPressed(.RIGHT) {
+        if rl.IsMouseButtonPressed(.MIDDLE) {
             if rl.IsCursorHidden() do rl.EnableCursor()
             else do rl.DisableCursor()
         }
@@ -91,9 +91,29 @@ main :: proc() {
             camera_movement(&camera, dt)
 
             ray := rl.GetMouseRay(rl.GetMousePosition(), camera)
-            if hovered, ok := get_hovered_tile(hex_map, ray); ok && hovered_tile != hovered {
-                hovered_tile = hovered
-                fight.path_update(hovered)
+            if hovered, ok := get_hovered_tile(fight.level, ray); ok  {
+                if hovered_tile != hovered {
+                    hovered_tile = hovered
+                    fight.path_update(hovered)
+                }
+
+                if rl.IsMouseButtonPressed(.LEFT) {
+                    if id, occupied := fight.get_fighter_by_tile(hovered); occupied {
+                        if fight.fighters[id].team == fight.side_to_move {
+                            fight.set_active_fighter(id)
+                        }
+                    } else if hovered in fight.paths.legal {
+                        fight.fighters[fight.active_fighter].hex = hovered
+                        fight.fighters[fight.active_fighter].moves_remaining -= len(fight.paths.path)
+                        fight.set_active_fighter(fight.active_fighter) // Re-calculate moves.
+                    }
+                }
+
+                if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
+            }
+
+            if rl.IsKeyPressed(.SPACE) {
+                fight.end_turn()
             }
         }
 
@@ -103,7 +123,7 @@ main :: proc() {
             rl.ClearBackground(rl.BLACK)
 
             rl.BeginMode3D(camera)
-                draw_board(hex_map, hovered_tile)
+                draw_board(fight.level, hovered_tile)
             rl.EndMode3D()
 
             draw_gui(&camera)
@@ -138,15 +158,16 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
         point := hex.hex_to_world(fighter.hex)
         pos := rl.Vector3{point.x, 1.5, point.y}
 
-        rl.DrawCapsule(pos, pos + {0, 1, 0}, 0.5, 16, 4, rl.LIME)
+        color := rl.RED if fighter.team == .Red else rl.DARKBLUE
+        rl.DrawCapsule(pos, pos + {0, 1, 0}, 0.5, 16, 4, color)
     }
 }
 
 
 camera_movement :: proc(camera: ^rl.Camera, dt: f32) {
-    MOVE :: 10
-    ROT  ::  5
-    ZOOM :: 20
+    MOVE ::  10
+    ROT  ::   5
+    ZOOM :: 200
 
     forward := int(rl.IsKeyDown(.W) || rl.IsKeyDown(.UP)) - int(rl.IsKeyDown(.S) || rl.IsKeyDown(.DOWN))
     strafe  := int(rl.IsKeyDown(.D) || rl.IsKeyDown(.RIGHT)) - int(rl.IsKeyDown(.A) || rl.IsKeyDown(.LEFT))

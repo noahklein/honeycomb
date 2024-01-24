@@ -41,6 +41,10 @@ legal_moves :: proc(level: hex.Map, fighter_id: int) {
                 continue
             }
 
+            if _, is_occupied := get_fighter_by_tile(neighbor); is_occupied {
+                continue
+            }
+
             paths.legal[neighbor] = {}
             append(&neighbors, neighbor)
         }
@@ -83,4 +87,12 @@ path_update :: proc(dest: hex.Hex) {
     }
 
     pop_safe(&paths.path) // Remove fighter's tile from path.
+}
+
+get_fighter_by_tile :: proc(h: hex.Hex) -> (int, bool) {
+    for f, i in fighters do if f.hex == h {
+        return i, true
+    }
+
+    return -1, false
 }
