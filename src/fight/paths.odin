@@ -17,13 +17,13 @@ PathFinding :: struct {
 legal_moves :: proc(level: hex.Map, fighter_id: int) {
     clear(&paths.legal)
     f := fighters[fighter_id]
-    _legal_moves(level, f.hex, f.moves_remaining + 1)
+    _legal_moves(level, f.hex, f.moves_remaining)
     delete_key(&paths.legal, f.hex) // Fighter can't move to its own tile.
 }
 
 @(private="file")
 _legal_moves :: proc(level: hex.Map, tile: hex.Hex, depth: int) {
-    if depth <= 0 || tile not_in level || level[tile].type == .Water {
+    if depth < 0 || tile not_in level || level[tile].type == .Water {
         return
     }
 

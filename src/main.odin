@@ -66,7 +66,7 @@ main :: proc() {
 
     fight.init()
     defer fight.deinit()
-    append(&fight.fighters, fight.Fighter{ moves_remaining = 12})
+    append(&fight.fighters, fight.Fighter{ moves_remaining = 5})
     fight.legal_moves(hex_map, 0)
     fight.path_finding(hex_map, 0)
 
@@ -135,7 +135,7 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
         point := hex.hex_to_world(hex.layout, fighter.hex)
         pos := rl.Vector3{point.x, 1.5, point.y}
 
-        rl.DrawSphere(pos, 0.5, rl.LIME)
+        rl.DrawCapsule(pos, pos + {0, 1, 0}, 0.5, 16, 4, rl.LIME)
     }
 }
 
