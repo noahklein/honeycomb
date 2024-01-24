@@ -108,13 +108,10 @@ main :: proc() {
                         fight.set_active_fighter(fight.active_fighter) // Re-calculate moves.
                     }
                 }
-
-                if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
             }
 
-            if rl.IsKeyPressed(.SPACE) {
-                fight.end_turn()
-            }
+            if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
+            if rl.IsKeyPressed(.SPACE) do fight.end_turn()
         }
 
         if rlutil.profile_begin("draw") {
