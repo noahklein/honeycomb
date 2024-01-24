@@ -142,19 +142,23 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
     }
 }
 
-CAM_MOVE := f32(10)
-CAM_ROT  := f32(5)
 
 camera_movement :: proc(camera: ^rl.Camera, dt: f32) {
+    MOVE :: 10
+    ROT  ::  5
+    ZOOM :: 20
+
     forward := int(rl.IsKeyDown(.W) || rl.IsKeyDown(.UP)) - int(rl.IsKeyDown(.S) || rl.IsKeyDown(.DOWN))
     strafe  := int(rl.IsKeyDown(.D) || rl.IsKeyDown(.RIGHT)) - int(rl.IsKeyDown(.A) || rl.IsKeyDown(.LEFT))
-    movement := dt * CAM_MOVE * rl.Vector3{ f32(forward), f32(strafe), 0 }
+    movement := dt * MOVE * rl.Vector3{ f32(forward), f32(strafe), 0 }
 
     rot: rl.Vector2
     if rl.IsCursorHidden() {
-        rot = dt * CAM_ROT * rl.GetMouseDelta()
+        rot = dt * ROT * rl.GetMouseDelta()
     }
-    rl.UpdateCameraPro(camera, movement, {rot.x, rot.y, 0}, rl.GetMouseWheelMove() * 2)
+
+    zoom := dt * ZOOM * -rl.GetMouseWheelMove()
+    rl.UpdateCameraPro(camera, movement, {rot.x, rot.y, 0}, zoom)
 }
 
 @(require_results)
