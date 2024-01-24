@@ -23,7 +23,7 @@ legal_moves :: proc(level: hex.Map, fighter_id: int) {
 
 @(private="file")
 _legal_moves :: proc(level: hex.Map, tile: hex.Hex, depth: int) {
-    if depth <= 0 || tile not_in level {
+    if depth <= 0 || tile not_in level || level[tile].type == .Water {
         return
     }
 

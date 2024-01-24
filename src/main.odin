@@ -60,12 +60,13 @@ main :: proc() {
     }
 
     hex_map: hex.Map
-    hex.map_gen_hexagon(&hex_map, 10)
     defer delete(hex_map)
+    hex.map_gen_hexagon(&hex_map, 10)
+    hex.map_randomize(&hex_map)
 
     fight.init()
     defer fight.deinit()
-    append(&fight.fighters, fight.Fighter{ moves_remaining = 6})
+    append(&fight.fighters, fight.Fighter{ moves_remaining = 12})
     fight.legal_moves(hex_map, 0)
     fight.path_finding(hex_map, 0)
 
@@ -112,16 +113,18 @@ main :: proc() {
 hex_tile_size := rl.Vector2{linalg.SQRT_THREE, 1.5}
 
 draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
-    for h in hex_map {
+    for h, tile in hex_map {
         point := hex.hex_to_world(hex.layout, h)
         pos := rl.Vector3{point.x, 0, point.y}
 
-        color := rl.RED if h in fight.paths.legal else rl.BLUE
+        color := hex.TILE_COLORS[tile.type]
+        if h in fight.paths.legal {
+            color = rl.BEIGE
+        }
         if slice.contains(fight.paths.path[:], h) {
             color = rl.GREEN
-        }
-        if hovered == h {
-            color = rl.SKYBLUE
+        } else if hovered == h  {
+            color = rl.DARKGREEN
         }
 
         rl.DrawCylinder     (pos, 1, 1, 1, 6, color)

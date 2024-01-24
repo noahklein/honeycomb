@@ -1,6 +1,16 @@
 package hex
 
-Map :: map[Hex]struct{}
+import "core:math/rand"
+import rl "vendor:raylib"
+
+Map :: map[Hex]Tile
+
+TileType :: enum u8 {
+    Ground, Water,
+}
+Tile :: struct{
+    type: TileType,
+}
 
 map_gen_triangle :: proc(m: ^Map, size: int) {
     clear(m)
@@ -25,4 +35,15 @@ map_gen_hexagon :: proc(m: ^Map, radius: int) {
             m[hex(q, r)] = {}
         }
     }
+}
+
+map_randomize :: proc(m: ^Map) {
+    for h, &tile in m do if h != 0 {
+        tile.type = TileType(rand.int_max(len(TileType)))
+    }
+}
+
+TILE_COLORS := [TileType]rl.Color{
+    .Ground = rl.BROWN,
+    .Water = rl.BLUE,
 }
