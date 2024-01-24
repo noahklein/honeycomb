@@ -23,7 +23,7 @@ legal_moves :: proc(level: hex.Map, fighter_id: int) {
     paths.legal[start] = {}
     defer delete_key(&paths.legal, start) // Fighter can't move to its own tile.
 
-    // Flow-fileld BFS. Visits nodes layer-by-layer.
+    // Visits nodes layer-by-layer.
     visiting  := make([dynamic]hex.Hex, context.temp_allocator) // The nodes on this layer.
     neighbors := make([dynamic]hex.Hex, context.temp_allocator) // Their neighbors.
     append(&neighbors, start)
