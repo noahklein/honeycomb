@@ -16,5 +16,6 @@ deinit :: proc() {
     delete(fighters)
     delete(paths.legal)
     delete(paths.came_from)
+    delete(paths.path)
     queue.destroy(&paths.queue)
 }

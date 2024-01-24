@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:math/linalg"
 import "core:mem"
+import "core:slice"
 
 import rl "vendor:raylib"
 
@@ -43,6 +44,7 @@ main :: proc() {
     rl.InitWindow(1600, 900, "Farm")
     defer rl.CloseWindow()
 
+    rl.rlSetLineWidth(2)
     rl.rlEnableSmoothLines()
 
     // Before we do anything, clear the screen to avoid transparent windows.
@@ -63,7 +65,7 @@ main :: proc() {
 
     fight.init()
     defer fight.deinit()
-    append(&fight.fighters, fight.Fighter{ moves_remaining = 3})
+    append(&fight.fighters, fight.Fighter{ moves_remaining = 6})
     fight.legal_moves(hex_map, 0)
     fight.path_finding(hex_map, 0)
 
@@ -88,8 +90,9 @@ main :: proc() {
             camera_movement(&camera, dt)
 
             ray := rl.GetMouseRay(rl.GetMousePosition(), camera)
-            if hovered, ok := get_hovered_tile(hex_map, ray); ok {
+            if hovered, ok := get_hovered_tile(hex_map, ray); ok && hovered_tile != hovered {
                 hovered_tile = hovered
+                fight.path_update(hovered)
             }
         }
 
@@ -113,11 +116,14 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
         point := hex.hex_to_world(hex.layout, h)
         pos := rl.Vector3{point.x, 0, point.y}
 
-
         color := rl.RED if h in fight.paths.legal else rl.BLUE
-        if hovered == h {
-            color = rl.YELLOW
+        if slice.contains(fight.paths.path[:], h) {
+            color = rl.GREEN
         }
+        if hovered == h {
+            color = rl.SKYBLUE
+        }
+
         rl.DrawCylinder     (pos, 1, 1, 1, 6, color)
         rl.DrawCylinderWires(pos, 1, 1, 1, 6, rl.WHITE)
     }
@@ -126,7 +132,7 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
         point := hex.hex_to_world(hex.layout, fighter.hex)
         pos := rl.Vector3{point.x, 1.5, point.y}
 
-        rl.DrawSphere(pos, 0.5, rl.GREEN)
+        rl.DrawSphere(pos, 0.5, rl.LIME)
     }
 }
 
