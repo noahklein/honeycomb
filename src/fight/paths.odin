@@ -14,23 +14,36 @@ PathFinding :: struct {
     queue: queue.Queue(hex.Hex),
 }
 
+
 legal_moves :: proc(level: hex.Map, fighter_id: int) {
+    fighter := fighters[fighter_id]
+    start, moves := fighter.hex, fighter.moves_remaining
+
     clear(&paths.legal)
-    f := fighters[fighter_id]
-    _legal_moves(level, f.hex, f.moves_remaining)
-    delete_key(&paths.legal, f.hex) // Fighter can't move to its own tile.
-}
+    paths.legal[start] = {}
+    defer delete_key(&paths.legal, start) // Fighter can't move to its own tile.
 
-@(private="file")
-_legal_moves :: proc(level: hex.Map, tile: hex.Hex, depth: int) {
-    if depth < 0 || tile not_in level || level[tile].type == .Water {
-        return
-    }
+    // Flow-fileld BFS. Visits nodes layer-by-layer.
+    visiting  := make([dynamic]hex.Hex, context.temp_allocator) // The nodes on this layer.
+    neighbors := make([dynamic]hex.Hex, context.temp_allocator) // Their neighbors.
+    append(&neighbors, start)
+    for _ in 1..=moves {
+        // Next layer; swap buffers.
+        visiting, neighbors = neighbors, visiting
+        clear(&neighbors)
 
-    paths.legal[tile] = {}
-    for dir in hex.Direction {
-        neighbor := hex.neighbor(tile, dir)
-        _legal_moves(level, neighbor, depth - 1)
+        for h in visiting do for dir in hex.Direction {
+            neighbor := hex.neighbor(h, dir)
+            if neighbor in paths.legal {
+                continue
+            }
+            if neighbor not_in level || level[neighbor].type == .Water {
+                continue
+            }
+
+            paths.legal[neighbor] = {}
+            append(&neighbors, neighbor)
+        }
     }
 }
 

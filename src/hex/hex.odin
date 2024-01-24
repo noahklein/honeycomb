@@ -17,7 +17,6 @@ direction :: #force_inline proc(dir: Direction) -> Hex { return DIRECTIONS[dir] 
 @(require_results)
 hex :: proc(q, r: int) -> Hex {
     h := Hex{q, r, -q-r}
-    assert(h.x + h.y + h.z == 0, "q + r + s != 0")
     return h
 }
 

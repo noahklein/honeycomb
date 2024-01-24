@@ -66,7 +66,7 @@ main :: proc() {
 
     fight.init()
     defer fight.deinit()
-    append(&fight.fighters, fight.Fighter{ moves_remaining = 5})
+    append(&fight.fighters, fight.Fighter{ moves_remaining = 8})
     fight.legal_moves(hex_map, 0)
     fight.path_finding(hex_map, 0)
 
@@ -97,16 +97,17 @@ main :: proc() {
             }
         }
 
-        rlutil.profile_begin("draw")
-        rl.BeginDrawing()
-        defer rl.EndDrawing()
-        rl.ClearBackground(rl.BLACK)
+        if rlutil.profile_begin("draw") {
+            rl.BeginDrawing()
+            defer rl.EndDrawing()
+            rl.ClearBackground(rl.BLACK)
 
-        rl.BeginMode3D(camera)
-            draw_board(hex_map, hovered_tile)
-        rl.EndMode3D()
+            rl.BeginMode3D(camera)
+                draw_board(hex_map, hovered_tile)
+            rl.EndMode3D()
 
-        draw_gui(&camera)
+            draw_gui(&camera)
+        }
     }
 }
 
@@ -127,8 +128,10 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
             color = rl.DARKGREEN
         }
 
-        rl.DrawCylinder     (pos, 1, 1, 1, 6, color)
-        rl.DrawCylinderWires(pos, 1, 1, 1, 6, rl.WHITE)
+        RADIUS :: 1
+        HEIGHT :: 1
+        rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
+        rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
     }
 
     for fighter in fight.fighters {

@@ -20,6 +20,7 @@ Orientation :: struct {
     start_angle: f32, // In multiples of 60°.
 }
 
+// Pointy hexagons have pointy tips on N and S, Flat on E and W.
 POINTY :: Orientation{
     forward = {SQRT_THREE,  SQRT_THREE/2, 0, 3.0/2},
     inverse = {SQRT_THREE/3,      -1.0/3, 0, 2.0/3},
