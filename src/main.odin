@@ -156,22 +156,13 @@ camera_movement :: proc(camera: ^rl.Camera, dt: f32) {
 
 @(require_results)
 get_hovered_tile :: proc(hex_map: hex.Map, ray: rl.Ray) -> (hex.Hex, bool) {
-    // Get point of impact with mouse ray and a plane with y = 1.
+    // Get point of impact with mouse ray and a plane.
     ray := rl.GetMouseRay(rl.GetMousePosition(), camera)
-    plane_collision := rl.GetRayCollisionQuad(ray,
-        {-500, 1, -500},
-        { 500, 1, -500},
-        { 500, 1,  500},
-        {-500, 1,  500},
-    )
+    t := (1 - ray.position.y) / ray.direction.y // Solve for t with y = 1.
+    plane_collision_point := ray.position + t*ray.direction
 
-    if plane_collision.hit {
-        // Convert the plane collision point to hex coordinates.
-        frac := hex.world_to_hex(hex.layout, plane_collision.point.xz)
-        h := hex.fractional_to_hex(frac)
-
-        return h, h in hex_map
-    }
-
-    return 0, false
+    // Convert the plane collision point to hex coordinates.
+    frac := hex.world_to_hex(hex.layout, plane_collision_point.xz)
+    h := hex.fractional_to_hex(frac)
+    return h, h in hex_map
 }
