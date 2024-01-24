@@ -44,7 +44,7 @@ main :: proc() {
     rl.InitWindow(1600, 900, "Farm")
     defer rl.CloseWindow()
 
-    rl.rlSetLineWidth(2)
+    rl.rlSetLineWidth(3)
     rl.rlEnableSmoothLines()
 
     // Before we do anything, clear the screen to avoid transparent windows.
@@ -114,7 +114,7 @@ hex_tile_size := rl.Vector2{linalg.SQRT_THREE, 1.5}
 
 draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
     for h, tile in hex_map {
-        point := hex.hex_to_world(hex.layout, h)
+        point := hex.hex_to_world(h)
         pos := rl.Vector3{point.x, 0, point.y}
 
         color := hex.TILE_COLORS[tile.type]
@@ -132,7 +132,7 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
     }
 
     for fighter in fight.fighters {
-        point := hex.hex_to_world(hex.layout, fighter.hex)
+        point := hex.hex_to_world(fighter.hex)
         pos := rl.Vector3{point.x, 1.5, point.y}
 
         rl.DrawCapsule(pos, pos + {0, 1, 0}, 0.5, 16, 4, rl.LIME)
@@ -161,8 +161,7 @@ get_hovered_tile :: proc(hex_map: hex.Map, ray: rl.Ray) -> (hex.Hex, bool) {
     t := (1 - ray.position.y) / ray.direction.y // Solve for t with y = 1.
     plane_collision_point := ray.position + t*ray.direction
 
-    // Convert the plane collision point to hex coordinates.
-    frac := hex.world_to_hex(hex.layout, plane_collision_point.xz)
+    frac := hex.world_to_hex(plane_collision_point.xz)
     h := hex.fractional_to_hex(frac)
     return h, h in hex_map
 }

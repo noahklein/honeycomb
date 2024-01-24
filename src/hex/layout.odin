@@ -16,7 +16,7 @@ layout := Layout{
 }
 
 Orientation :: struct {
-    forward, inverse: [4]f32,
+    forward, inverse: [4]f32, // 2x2 transform matrices
     start_angle: f32, // In multiples of 60°.
 }
 
@@ -27,7 +27,7 @@ POINTY :: Orientation{
 }
 
 @(require_results)
-hex_to_world :: proc(layout: Layout, hex: Hex) -> rl.Vector2 {
+hex_to_world :: proc(hex: Hex) -> rl.Vector2 {
     M := layout.orientation.forward
     h := linalg.array_cast(hex, f32)
 
@@ -40,7 +40,7 @@ hex_to_world :: proc(layout: Layout, hex: Hex) -> rl.Vector2 {
 FractionalHex :: rl.Vector3
 
 @(require_results)
-world_to_hex :: proc(layout: Layout, point: rl.Vector2) -> FractionalHex {
+world_to_hex :: proc(point: rl.Vector2) -> FractionalHex {
     M := layout.orientation.inverse
     pt := (point - layout.origin) / layout.size
 
@@ -50,6 +50,7 @@ world_to_hex :: proc(layout: Layout, point: rl.Vector2) -> FractionalHex {
     return {q, r, -q-r}
 }
 
+@(require_results)
 fractional_to_hex :: proc(frac: FractionalHex) -> Hex {
     rounded : FractionalHex
     for elem, i in frac {

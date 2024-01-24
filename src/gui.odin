@@ -21,7 +21,6 @@ draw_gui :: proc(camera: ^rl.Camera) {
 
         if ngui.flex_row({0.2}) {
             ngui.vec2(&hex.layout.size, 1, 5, label = "Grid Size")
-
         }
 
         if ngui.flex_row({1}) {
