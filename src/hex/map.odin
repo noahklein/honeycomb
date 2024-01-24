@@ -45,5 +45,5 @@ map_randomize :: proc(m: ^Map) {
 
 TILE_COLORS := [TileType]rl.Color{
     .Ground = rl.BROWN,
-    .Water = rl.BLUE,
+    .Water  = rl.BLUE,
 }
