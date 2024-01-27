@@ -202,17 +202,24 @@ draw_cards_ui :: proc(deck: fight.Deck) {
     y := f32(rl.GetScreenHeight()) - CARD_HEIGHT - 5
 
     for card_id in deck.hand {
-        rec := rl.Rectangle{x, y, CARD_WIDTH, CARD_HEIGHT}
-        rl.DrawRectangleRec(rec, CARD_COLORS[card_id])
-        rl.DrawRectangleLinesEx(rec, 2, rl.BLACK)
+        rect := rl.Rectangle{x, y, CARD_WIDTH, CARD_HEIGHT}
+        color := CARD_COLORS[card_id]
+        if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect) {
+            color.r -= 50
+            color.b += 200
+
+            rect.y -= 15
+        }
+        rl.DrawRectangleRec(rect, color)
+        rl.DrawRectangleLinesEx(rect, 2, rl.BLACK)
 
         {
             // Label
             label := fmt.ctprintf("%v", card_id)
-            ngui.text_rect(rec, label, rl.BLACK, align = .Center)
+            ngui.text_rect(rect, label, rl.BLACK, align = .Center)
         }
 
-        x += CARD_WIDTH
+        x += CARD_WIDTH * 0.9
     }
 }
 
