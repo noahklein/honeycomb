@@ -52,7 +52,6 @@ main :: proc() {
         rl.ClearBackground(rl.GRAY)
     rl.EndDrawing()
 
-    // camera = rl.Camera2D{ zoom = 1, offset = rlutil.screen_size() / 2 }
     camera = rl.Camera{
         projection = .PERSPECTIVE, fovy = 90,
         position = {0, 5, -1}, up = {0, 1, 0},
@@ -88,8 +87,11 @@ main :: proc() {
         if rlutil.profile_begin("update") {
             camera_movement(&camera, dt)
 
+            fight.deck_update(fight.deck)
+            is_hovering_gui := fight.hand_hovered_card(fight.deck) != -1 || ngui.want_mouse()
+
             ray := rl.GetMouseRay(rl.GetMousePosition(), camera)
-            if hovered, ok := get_hovered_tile(fight.level, ray); ok  {
+            if hovered, ok := get_hovered_tile(fight.level, ray); ok && !is_hovering_gui {
                 if hovered_tile != hovered {
                     hovered_tile = hovered
                     fight.path_update(hovered)
@@ -122,7 +124,7 @@ main :: proc() {
                 draw_board(fight.level, hovered_tile)
             rl.EndMode3D()
 
-            draw_cards_ui(fight.deck)
+            fight.draw_cards_ui(fight.deck)
             draw_gui(&camera)
         }
     }
@@ -188,52 +190,4 @@ get_hovered_tile :: proc(hex_map: hex.Map, ray: rl.Ray) -> (hex.Hex, bool) {
     frac := hex.world_to_hex(plane_collision_point.xz)
     h := hex.fractional_to_hex(frac)
     return h, h in hex_map
-}
-
-CARD_WIDTH  :: 86
-CARD_HEIGHT :: CARD_WIDTH * 1.4
-
-draw_cards_ui :: proc(deck: fight.Deck) {
-    draw_deck_ui(10, len(deck.cards), rl.LIGHTGRAY)
-    draw_deck_ui(f32(rl.GetScreenWidth() - CARD_WIDTH - 10), len(deck.graveyard), rl.LIGHTGRAY)
-
-    hand_size := f32(len(deck.hand))
-    x := f32(rl.GetScreenWidth())/2 - hand_size*CARD_WIDTH / 2
-    y := f32(rl.GetScreenHeight()) - CARD_HEIGHT - 5
-
-    for card_id in deck.hand {
-        rect := rl.Rectangle{x, y, CARD_WIDTH, CARD_HEIGHT}
-        color := CARD_COLORS[card_id]
-        if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect) {
-            color.r -= 50
-            color.b += 200
-
-            rect.y -= 15
-        }
-        rl.DrawRectangleRec(rect, color)
-        rl.DrawRectangleLinesEx(rect, 2, rl.BLACK)
-
-        {
-            // Label
-            label := fmt.ctprintf("%v", card_id)
-            ngui.text_rect(rect, label, rl.BLACK, align = .Center)
-        }
-
-        x += CARD_WIDTH * 0.9
-    }
-}
-
-draw_deck_ui :: proc(x: f32, count: int, color: rl.Color) {
-    deck_rect := rl.Rectangle{
-        x, f32(rl.GetScreenHeight()) - CARD_HEIGHT - 5,
-        CARD_WIDTH, CARD_HEIGHT,
-    }
-    rl.DrawRectangleRec(deck_rect, color)
-    ngui.text_rect(deck_rect, fmt.ctprintf("%v", count), align = .Center)
-}
-
-// @TEMP
-CARD_COLORS := [fight.CardId]rl.Color {
-    .Warrior = rl.YELLOW,
-    .Archer  = rl.ORANGE,
 }

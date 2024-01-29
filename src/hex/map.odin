@@ -39,7 +39,10 @@ map_gen_hexagon :: proc(m: ^Map, radius: int) {
 
 map_randomize :: proc(m: ^Map) {
     for h, &tile in m do if h != 0 {
-        tile.type = TileType(rand.int_max(len(TileType)))
+        switch rand.float32() {
+            case 0..<0.7: tile.type = .Ground
+            case:         tile.type = .Water
+        }
     }
 }
 

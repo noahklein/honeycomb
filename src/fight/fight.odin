@@ -21,7 +21,7 @@ Fighter :: struct {
 Team :: enum u8 { Blue, Red }
 
 init :: proc() {
-    hex.map_gen_hexagon(&level, 10)
+    hex.map_gen_hexagon(&level, 12)
     hex.map_randomize(&level)
 
     deck_random(&deck, 20)
