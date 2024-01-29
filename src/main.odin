@@ -111,8 +111,8 @@ main :: proc() {
             }
 
             if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
-            if rl.IsKeyPressed(.SPACE) do fight.end_turn()
-            if rl.IsKeyPressed(.R) do fight.deck_draw(&fight.deck)
+            if rl.IsKeyPressed(.SPACE)         do fight.end_turn()
+            if rl.IsKeyPressed(.R)             do fight.deck_draw(&fight.deck)
         }
 
         if rlutil.profile_begin("draw") {
@@ -168,7 +168,7 @@ camera_movement :: proc(camera: ^rl.Camera, dt: f32) {
     ROT  ::   5
     ZOOM :: 200
 
-    forward := int(rl.IsKeyDown(.W) || rl.IsKeyDown(.UP)) - int(rl.IsKeyDown(.S) || rl.IsKeyDown(.DOWN))
+    forward := int(rl.IsKeyDown(.W) || rl.IsKeyDown(.UP))    - int(rl.IsKeyDown(.S) || rl.IsKeyDown(.DOWN))
     strafe  := int(rl.IsKeyDown(.D) || rl.IsKeyDown(.RIGHT)) - int(rl.IsKeyDown(.A) || rl.IsKeyDown(.LEFT))
     movement := dt * MOVE * rl.Vector3{ f32(forward), f32(strafe), 0 }
 
