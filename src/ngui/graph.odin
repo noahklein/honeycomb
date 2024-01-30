@@ -75,7 +75,7 @@ graph_draw_rect :: proc(graph: Graph, rect: rl.Rectangle) {
             x1 := f32(i_norm) * inv_line_length * line_rect.width
             x2 := f32(j_norm) * inv_line_length * line_rect.width
 
-            rl.DrawLineV({rect.x+x1, rect.y+y1}, {rect.x+x2, rect.y+y2}, line.color)
+            rl.DrawLineEx({rect.x+x1, rect.y+y1}, {rect.x+x2, rect.y+y2}, 2, line.color)
         }
     }
 

@@ -1,6 +1,5 @@
 package rlutil
 
-import "core:intrinsics"
 import rl "vendor:raylib"
 
 nearly_eq :: proc{

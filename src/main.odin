@@ -1,7 +1,6 @@
 package main
 
 import "core:fmt"
-import "core:math/linalg"
 import "core:mem"
 import "core:slice"
 
@@ -40,11 +39,11 @@ main :: proc() {
     defer free_all(context.temp_allocator)
 
     rl.SetTraceLogLevel(.ALL if ODIN_DEBUG else .WARNING)
-    rl.SetConfigFlags({.VSYNC_HINT})
-    rl.InitWindow(1600, 900, "Farm")
+    rl.SetConfigFlags({.VSYNC_HINT, .MSAA_4X_HINT })
+    rl.InitWindow(1600, 900, "Honeycomb")
     defer rl.CloseWindow()
 
-    rl.rlSetLineWidth(3)
+    rl.rlSetLineWidth(4)
     rl.rlEnableSmoothLines()
 
     // Before we do anything, clear the screen to avoid transparent windows.
@@ -130,8 +129,6 @@ main :: proc() {
     }
 }
 
-hex_tile_size := rl.Vector2{linalg.SQRT_THREE, 1.5}
-
 draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
     for h, tile in hex_map {
         point := hex.hex_to_world(h)
@@ -147,6 +144,7 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
             color = rl.DARKGREEN
         }
 
+        // @TODO: Slow; load model and do instanced rendering.
         RADIUS :: 1
         HEIGHT :: 1
         rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
