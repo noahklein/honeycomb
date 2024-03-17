@@ -143,12 +143,17 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
         } else if hovered == h  {
             color = rl.DARKGREEN
         }
+        color = hex.map_kingdom_color(fight.level, fight.kingdoms_by_capital, h)
 
         // @TODO: Slow; load model and do instanced rendering.
         RADIUS :: 1
         HEIGHT :: 1
         rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
         rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
+
+        if h in fight.kingdoms_by_capital {
+            rl.DrawCubeV(pos + {0, 1, 0}, 0.25, rl.GOLD)
+        }
     }
 
     for fighter in fight.fighters {

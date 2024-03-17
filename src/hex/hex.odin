@@ -16,8 +16,7 @@ direction :: #force_inline proc(dir: Direction) -> Hex { return DIRECTIONS[dir] 
 
 @(require_results)
 hex :: proc(q, r: int) -> Hex {
-    h := Hex{q, r, -q-r}
-    return h
+    return Hex{q, r, -q-r}
 }
 
 @(require_results)

@@ -4,6 +4,7 @@ import "core:container/queue"
 import "../hex"
 
 level: hex.Map
+kingdoms_by_capital: hex.KingdomsByCapital
 side_to_move: Team
 fighters: [dynamic]Fighter
 active_fighter: int
@@ -23,6 +24,7 @@ Team :: enum u8 { Blue, Red }
 init :: proc() {
     hex.map_gen_hexagon(&level, 12)
     hex.map_randomize(&level)
+    hex.map_gen_kingdoms(&level, &kingdoms_by_capital)
 
     deck_random(&deck, 20)
 }
@@ -30,6 +32,7 @@ init :: proc() {
 deinit :: proc() {
     delete(fighters)
     delete(level)
+    delete(kingdoms_by_capital)
 
     delete(paths.legal)
     delete(paths.came_from)
