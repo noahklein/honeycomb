@@ -15,7 +15,7 @@ PathFinding :: struct {
 }
 
 
-legal_moves :: proc(level: hex.Map, fighter_id: int) {
+legal_moves :: proc(board: hex.Board, fighter_id: int) {
     fighter := fighters[fighter_id]
     start, moves := fighter.hex, fighter.moves_remaining
 
@@ -37,7 +37,7 @@ legal_moves :: proc(level: hex.Map, fighter_id: int) {
             if neighbor in paths.legal {
                 continue
             }
-            if neighbor not_in level || level[neighbor].type == .Water {
+            if neighbor not_in board || board[neighbor].type == .Water {
                 continue
             }
 
@@ -51,7 +51,7 @@ legal_moves :: proc(level: hex.Map, fighter_id: int) {
     }
 }
 
-path_finding :: proc(level: hex.Map, fighter_id: int) {
+path_finding :: proc(board: hex.Board, fighter_id: int) {
     start := fighters[fighter_id].hex
     queue.clear(&paths.queue)
     queue.push(&paths.queue, start)

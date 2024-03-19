@@ -90,7 +90,7 @@ main :: proc() {
             is_hovering_gui := fight.hand_hovered_card(fight.deck) != -1 || ngui.want_mouse()
 
             ray := rl.GetMouseRay(rl.GetMousePosition(), camera)
-            if hovered, ok := get_hovered_tile(fight.level, ray); ok && !is_hovering_gui {
+            if hovered, ok := get_hovered_tile(fight.board, ray); ok && !is_hovering_gui {
                 if hovered_tile != hovered {
                     hovered_tile = hovered
                     fight.path_update(hovered)
@@ -120,7 +120,7 @@ main :: proc() {
             rl.ClearBackground(rl.BLACK)
 
             rl.BeginMode3D(camera)
-                draw_board(fight.level, hovered_tile)
+                draw_board(fight.board, hovered_tile)
             rl.EndMode3D()
 
             fight.draw_cards_ui(fight.deck)
@@ -129,8 +129,10 @@ main :: proc() {
     }
 }
 
-draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
-    for h, tile in hex_map {
+draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
+    hovered_capital := hex_board[hovered].capital
+
+    for h, tile in hex_board {
         point := hex.hex_to_world(h)
         pos := rl.Vector3{point.x, 0, point.y}
 
@@ -143,7 +145,10 @@ draw_board :: proc(hex_map: hex.Map, hovered: hex.Hex) {
         } else if hovered == h  {
             color = rl.DARKGREEN
         }
-        color = hex.map_kingdom_color(fight.level, fight.kingdoms_by_capital, h)
+        color = hex.board_kingdom_color(fight.board, fight.kingdoms_by_capital, h)
+        if tile.capital == hovered_capital {
+            color = ngui.lerp_color(color, rl.WHITE, 0.25)
+        }
 
         // @TODO: Slow; load model and do instanced rendering.
         RADIUS :: 1
@@ -185,12 +190,12 @@ camera_movement :: proc(camera: ^rl.Camera, dt: f32) {
 }
 
 @(require_results)
-get_hovered_tile :: proc(hex_map: hex.Map, ray: rl.Ray) -> (hex.Hex, bool) {
+get_hovered_tile :: proc(hex_board: hex.Board, ray: rl.Ray) -> (hex.Hex, bool) {
     // Get point of impact with mouse ray and a plane.
     t := (1 - ray.position.y) / ray.direction.y // Solve for t with y = 1.
     plane_collision_point := ray.position + t*ray.direction
 
     frac := hex.world_to_hex(plane_collision_point.xz)
     h := hex.fractional_to_hex(frac)
-    return h, h in hex_map
+    return h, h in hex_board
 }

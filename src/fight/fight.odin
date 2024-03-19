@@ -3,7 +3,7 @@ package fight
 import "core:container/queue"
 import "../hex"
 
-level: hex.Map
+board: hex.Board
 kingdoms_by_capital: hex.KingdomsByCapital
 side_to_move: Team
 fighters: [dynamic]Fighter
@@ -22,16 +22,16 @@ Fighter :: struct {
 Team :: enum u8 { Blue, Red }
 
 init :: proc() {
-    hex.map_gen_hexagon(&level, 12)
-    hex.map_randomize(&level)
-    hex.map_gen_kingdoms(&level, &kingdoms_by_capital)
+    hex.board_gen_hexagon(&board, 12)
+    hex.board_randomize(&board)
+    hex.board_gen_kingdoms(&board, &kingdoms_by_capital)
 
     deck_random(&deck, 20)
 }
 
 deinit :: proc() {
     delete(fighters)
-    delete(level)
+    delete(board)
     delete(kingdoms_by_capital)
 
     delete(paths.legal)
@@ -53,8 +53,8 @@ set_active_fighter :: proc(id: int) {
     assert(fighters[id].team == side_to_move)
     active_fighter = id
 
-    legal_moves (level, id)
-    path_finding(level, id)
+    legal_moves (board, id)
+    path_finding(board, id)
 }
 
 deselect_fighter :: proc() {

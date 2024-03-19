@@ -4,14 +4,14 @@ import "core:fmt"
 import "core:math/rand"
 import rl "vendor:raylib"
 
-Map :: map[Hex]Tile
+Board :: map[Hex]Tile
 
 TileType :: enum u8 {
     Ground, Water,
 }
 Tile :: struct{
     type: TileType,
-    capital: Maybe(Hex), // Capital city of this tile's kingdom.
+    capital: Hex, // Capital city of this tile's kingdom.
 }
 
 KingdomsByCapital :: map[Hex]Kingdom
@@ -20,32 +20,32 @@ Kingdom :: struct {
     color: rl.Color,
 }
 
-map_gen_triangle :: proc(m: ^Map, size: int) {
-    clear(m)
-    reserve(m, size * (size - 1) / 2)
+board_gen_triangle :: proc(board: ^Board, size: int) {
+    clear(board)
+    reserve(board, size * (size - 1) / 2)
 
     for q in 0..<size {
         for r in size - q..<size {
-            m[hex(q, r)] = {}
+            board[hex(q, r)] = {}
         }
     }
 }
 
-map_gen_hexagon :: proc(m: ^Map, radius: int) {
-    clear(m)
-    reserve(m, radius * (radius - 1) / 2)
+board_gen_hexagon :: proc(board: ^Board, radius: int) {
+    clear(board)
+    reserve(board, radius * (radius - 1) / 2)
 
     for q in -radius..=radius {
         r1 := max(-radius, -q - radius)
         r2 := min( radius, -q + radius)
 
         for r in r1..=r2 {
-            m[hex(q, r)] = {}
+            board[hex(q, r)] = {}
         }
     }
 }
 
-map_randomize :: proc(m: ^Map) {
+board_randomize :: proc(m: ^Board) {
     for h, &tile in m do if h != 0 {
         switch rand.float32() {
             case 0..<0.7: tile.type = .Ground
@@ -59,17 +59,18 @@ TILE_COLORS := [TileType]rl.Color{
     .Water  = rl.BLUE,
 }
 
-map_gen_kingdoms :: proc(m: ^Map, kingdoms: ^KingdomsByCapital) {
+board_gen_kingdoms :: proc(board: ^Board, kingdoms: ^KingdomsByCapital) {
     kingdom_colors := [?]rl.Color{
         rl.RED, rl.ORANGE, rl.YELLOW, rl.GREEN, rl.VIOLET,
         rl.LIGHTGRAY, rl.PURPLE, rl.BLUE, rl.SKYBLUE, rl.PINK, rl.BLACK,
         rl.MAGENTA, rl.BROWN, rl.BEIGE,
     }
 
-    for h, tile in m {
-        if h in kingdoms do continue
-        if _, ok := tile.capital.?; ok do continue
+    // Erect capitals greedily.
+    for h, tile in board {
+        if h in kingdoms || tile.capital != 0 do continue
 
+        tile.capital = h
         kingdoms[h] = Kingdom{
             color = rand.choice(kingdom_colors[:]), // TODO: adjacent kingdoms should be different colors.
         }
@@ -78,14 +79,13 @@ map_gen_kingdoms :: proc(m: ^Map, kingdoms: ^KingdomsByCapital) {
         remaining := 4
         for dir in Direction {
             nbr := neighbor(h, dir)
-            if nbr not_in m || nbr in kingdoms {
+            if nbr not_in board || nbr in kingdoms {
                 continue
             }
 
-            city := &m[nbr]
-            if city.capital != nil {
-                continue // City already belongs to a kingdom.
-            }
+            city := &board[nbr]
+            if city.capital != 0 do continue // City already belongs to another kingdom.
+
             city.capital = h
 
             remaining -= 1
@@ -98,9 +98,14 @@ map_gen_kingdoms :: proc(m: ^Map, kingdoms: ^KingdomsByCapital) {
             fmt.printfln("Remaining %v", remaining)
         }
     }
+
+    {
+        // Kingdoms have been established. 
+        // TODO: adjacent color fix.
+    }
 }
 
-map_kingdom_color :: proc(m: Map, kingdoms: KingdomsByCapital, h: Hex) -> rl.Color {
-    capital := m[h].capital.? or_else h
+board_kingdom_color :: proc(board: Board, kingdoms: KingdomsByCapital, h: Hex) -> rl.Color {
+    capital := board[h].capital
     return kingdoms[capital].color
 }
