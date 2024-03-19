@@ -154,20 +154,20 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
         RADIUS :: 1
         HEIGHT :: 1
         rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
-        rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
+        // rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
 
         if h in fight.kingdoms_by_capital {
             rl.DrawCubeV(pos + {0, 1, 0}, 0.25, rl.GOLD)
         }
     }
 
-    for fighter in fight.fighters {
-        point := hex.hex_to_world(fighter.hex)
-        pos := rl.Vector3{point.x, 1.5, point.y}
+    // for fighter in fight.fighters {
+    //     point := hex.hex_to_world(fighter.hex)
+    //     pos := rl.Vector3{point.x, 1.5, point.y}
 
-        color := rl.RED if fighter.team == .Red else rl.DARKBLUE
-        rl.DrawCapsule(pos, pos + {0, 1, 0}, 0.5, 16, 4, color)
-    }
+    //     color := rl.RED if fighter.team == .Red else rl.DARKBLUE
+    //     rl.DrawCapsule(pos, pos + {0, 1, 0}, 0.5, 16, 4, color)
+    // }
 }
 
 

@@ -1,6 +1,5 @@
 package hex
 
-import "core:fmt"
 import "core:math/rand"
 import rl "vendor:raylib"
 
@@ -60,20 +59,12 @@ TILE_COLORS := [TileType]rl.Color{
 }
 
 board_gen_kingdoms :: proc(board: ^Board, kingdoms: ^KingdomsByCapital) {
-    kingdom_colors := [?]rl.Color{
-        rl.RED, rl.ORANGE, rl.YELLOW, rl.GREEN, rl.VIOLET,
-        rl.LIGHTGRAY, rl.PURPLE, rl.BLUE, rl.SKYBLUE, rl.PINK, rl.BLACK,
-        rl.MAGENTA, rl.BROWN, rl.BEIGE,
-    }
-
     // Erect capitals greedily.
     for h, tile in board {
         if h in kingdoms || tile.capital != 0 do continue
 
         tile.capital = h
-        kingdoms[h] = Kingdom{
-            color = rand.choice(kingdom_colors[:]), // TODO: adjacent kingdoms should be different colors.
-        }
+        kingdoms[h] = Kingdom{color = rl.BLACK} // Colors will be assigned later.
 
         // Pick neighbors as cities.
         remaining := 4
@@ -93,15 +84,36 @@ board_gen_kingdoms :: proc(board: ^Board, kingdoms: ^KingdomsByCapital) {
                 break
             }
         }
-
-        if remaining != 0 {
-            fmt.printfln("Remaining %v", remaining)
-        }
     }
 
     {
-        // Kingdoms have been established. 
-        // TODO: adjacent color fix.
+        // Kingdoms have been established. Assign colors such that no neighbors share a color.
+        neighboring_capitals := make(map[Hex]struct{}, 10, context.temp_allocator)
+        COLORS := [?]rl.Color{rl.RED, rl.GREEN, rl.BLUE, rl.YELLOW, rl.PURPLE} // @BUG: favors colors at the end of this array.
+
+        for capital, &kingdom in kingdoms {
+            clear(&neighboring_capitals)
+
+            // Wasteful linear search to find cities in this kingdom.
+            for h, tile in board {
+                if tile.capital == capital {
+                    for dir in Direction {
+                        nbr := neighbor(h, dir)
+                        if nbr not_in board do continue
+
+                        nbr_capital := board[nbr].capital
+                        neighboring_capitals[nbr_capital] = {}
+                    }
+                }
+            }
+
+            color_loop: for color in COLORS {
+                for nbr_cap in neighboring_capitals {
+                    if kingdoms[nbr_cap].color == color do continue color_loop
+                }
+                kingdom.color = color
+            }
+        }
     }
 }
 
