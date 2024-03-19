@@ -93,17 +93,13 @@ board_gen_kingdoms :: proc(board: ^Board, kingdoms: ^KingdomsByCapital) {
 
         for capital, &kingdom in kingdoms {
             clear(&neighboring_capitals)
+            for h, tile in board do if tile.capital == capital { // Wasteful linear search to find cities in this kingdom.
+                for dir in Direction {
+                    nbr := neighbor(h, dir)
+                    if nbr not_in board do continue
 
-            // Wasteful linear search to find cities in this kingdom.
-            for h, tile in board {
-                if tile.capital == capital {
-                    for dir in Direction {
-                        nbr := neighbor(h, dir)
-                        if nbr not_in board do continue
-
-                        nbr_capital := board[nbr].capital
-                        neighboring_capitals[nbr_capital] = {}
-                    }
+                    nbr_capital := board[nbr].capital
+                    neighboring_capitals[nbr_capital] = {}
                 }
             }
 

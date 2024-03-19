@@ -22,8 +22,8 @@ Fighter :: struct {
 Team :: enum u8 { Blue, Red }
 
 init :: proc() {
-    hex.board_gen_hexagon(&board, 12)
-    hex.board_randomize(&board)
+    hex.board_gen_hexagon(&board, 19)
+    // hex.board_randomize(&board)
     hex.board_gen_kingdoms(&board, &kingdoms_by_capital)
 
     deck_random(&deck, 20)
