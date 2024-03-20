@@ -89,7 +89,7 @@ board_gen_kingdoms :: proc(board: ^Board, kingdoms: ^KingdomsByCapital) {
     {
         // Kingdoms have been established. Assign colors such that no neighbors share a color.
         neighboring_capitals := make(map[Hex]struct{}, 10, context.temp_allocator)
-        COLORS := [?]rl.Color{rl.RED, rl.GREEN, rl.BLUE, rl.YELLOW, rl.PURPLE, rl.ORANGE}
+        COLORS := [?]rl.Color{rl.RED, rl.GREEN, rl.BLUE, rl.YELLOW, rl.PURPLE, rl.ORANGE, rl.PINK}
 
         for capital, &kingdom in kingdoms {
             clear(&neighboring_capitals)
