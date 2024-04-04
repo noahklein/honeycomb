@@ -14,6 +14,8 @@ import "rlutil"
 camera: rl.Camera
 timescale: f32 = 1
 
+center_tile: hex.Hex
+
 main :: proc() {
     when ODIN_DEBUG {
         track: mem.Tracking_Allocator
@@ -97,6 +99,7 @@ main :: proc() {
                 }
 
                 if rl.IsMouseButtonPressed(.LEFT) {
+                    center_tile = hovered
                     if id, occupied := fight.get_fighter_by_tile(hovered); occupied {
                         if fight.fighters[id].team == fight.side_to_move {
                             fight.set_active_fighter(id)
@@ -130,44 +133,56 @@ main :: proc() {
 }
 
 draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
-    hovered_capital := hex_board[hovered].capital
+    DRAW_RADIUS :: 4
 
-    for h, tile in hex_board {
-        point := hex.hex_to_world(h)
-        pos := rl.Vector3{point.x, 0, point.y}
-
-        color := hex.TILE_COLORS[tile.type]
-        if h in fight.paths.legal {
-            color = rl.BEIGE
-        }
-        if slice.contains(fight.paths.path[:], h) {
-            color = rl.GREEN
-        } else if hovered == h  {
-            color = rl.DARKGREEN
-        }
-        color = hex.board_kingdom_color(fight.board, fight.kingdoms_by_capital, h)
-        if tile.capital == hovered_capital {
-            color = ngui.lerp_color(color, rl.WHITE, 0.25)
-        }
-
-        // @TODO: Slow; load model and do instanced rendering.
+    draw_hexagon :: proc(tile, center_tile: hex.Hex, hovered: bool) {
         RADIUS :: 1
         HEIGHT :: 1
-        rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
-        // rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
 
-        if h in fight.kingdoms_by_capital {
+        point := hex.hex_to_world(tile)
+        pos := rl.Vector3{point.x, 0, point.y}
+        color := hex.board_kingdom_color(fight.board, fight.kingdoms_by_capital, tile)
+        if hovered {
+            color = ngui.lerp_color(color, rl.WHITE, 0.5)
+        }
+
+        distance := hex.distance(tile, center_tile)
+        pos.y -= f32(distance) * hex_height_offset
+        // @TODO: Slow; load model and do instanced rendering.
+        rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
+        rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
+
+        if tile in fight.kingdoms_by_capital {
             rl.DrawCubeV(pos + {0, 1, 0}, 0.25, rl.GOLD)
         }
     }
 
-    // for fighter in fight.fighters {
-    //     point := hex.hex_to_world(fighter.hex)
-    //     pos := rl.Vector3{point.x, 1.5, point.y}
+    draw_ring :: proc(center: hex.Hex, radius: int, hovered_tile: hex.Hex) {
+        assert(radius > 0, "Radius must be greater than 0")
+        tile := center + hex.DIRECTIONS[hex.Direction.SW] * radius // Head off in SW direction.
+        for dir in hex.Direction { // First direction is E. Continue counter-clockwise.
+            for _ in 0..<radius {
+                draw_hexagon(tile, center_tile, tile == hovered_tile)
 
-    //     color := rl.RED if fighter.team == .Red else rl.DARKBLUE
-    //     rl.DrawCapsule(pos, pos + {0, 1, 0}, 0.5, 16, 4, color)
-    // }
+                tile = hex.neighbor(tile, dir)
+            }
+        }
+    }
+
+    // Hexes spiraling out from the center.
+    for radius in 1..<DRAW_RADIUS {
+        draw_ring(center_tile, radius, hovered)
+    }
+
+    draw_hexagon(center_tile, center_tile, center_tile == hovered)
+
+    {
+        // Draw player.
+        point := hex.hex_to_world(center_tile)
+        pos := rl.Vector3{point.x, 0, point.y}
+
+        rl.DrawCapsule(pos + {0, 1.2, 0}, pos + {0, 2, 0}, 0.5, 16, 4, rl.BROWN)
+    }
 }
 
 
