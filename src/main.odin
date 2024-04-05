@@ -44,6 +44,7 @@ main :: proc() {
     rl.SetConfigFlags({.VSYNC_HINT, .MSAA_4X_HINT })
     rl.InitWindow(1600, 900, "Honeycomb")
     defer rl.CloseWindow()
+    rl.SetTargetFPS(60)
 
     rl.rlSetLineWidth(4)
     rl.rlEnableSmoothLines()
@@ -98,8 +99,11 @@ main :: proc() {
                     fight.path_update(hovered)
                 }
 
-                if rl.IsMouseButtonPressed(.LEFT) {
+                if rl.IsMouseButtonDown(.LEFT) {
                     center_tile = hovered
+                }
+
+                if rl.IsMouseButtonPressed(.LEFT) {
                     if id, occupied := fight.get_fighter_by_tile(hovered); occupied {
                         if fight.fighters[id].team == fight.side_to_move {
                             fight.set_active_fighter(id)
@@ -159,7 +163,7 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
 
     draw_ring :: proc(center: hex.Hex, radius: int, hovered_tile: hex.Hex) {
         assert(radius > 0, "Radius must be greater than 0")
-        tile := center + hex.DIRECTIONS[hex.Direction.SW] * radius // Head off in SW direction.
+        tile := center + hex.DIRECTIONS[.SW] * radius // Head off in SW direction.
         for dir in hex.Direction { // First direction is E. Continue counter-clockwise.
             for _ in 0..<radius {
                 draw_hexagon(tile, center_tile, tile == hovered_tile)
