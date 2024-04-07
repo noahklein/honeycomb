@@ -84,7 +84,7 @@ main :: proc() {
             else do rl.DisableCursor()
         }
 
-        hovered_tile: hex.Hex
+        hovered_tile := hex.Hex(1e16)
         if rlutil.profile_begin("update") {
             camera_movement(&camera, dt)
 
@@ -95,36 +95,22 @@ main :: proc() {
             if hovered, ok := get_hovered_tile(fight.board, ray); ok && !is_hovering_gui {
                 if hovered_tile != hovered {
                     hovered_tile = hovered
-                    fight.path_update(hovered)
                 }
 
                 if rl.IsMouseButtonDown(.LEFT) {
                     center_tile = hovered
                 }
-
-                if rl.IsMouseButtonPressed(.LEFT) {
-                    if id, occupied := fight.get_fighter_by_tile(hovered); occupied {
-                        if fight.fighters[id].team == fight.side_to_move {
-                            fight.set_active_fighter(id)
-                        }
-                    } else if hovered in fight.paths.legal {
-                        fight.fighters[fight.active_fighter].hex = hovered
-                        fight.fighters[fight.active_fighter].moves_remaining -= len(fight.paths.path)
-                        fight.set_active_fighter(fight.active_fighter) // Re-calculate moves.
-                    }
-                }
             }
 
             if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
             if rl.IsKeyPressed(.SPACE)         do fight.end_turn()
-            // if rl.IsKeyPressed(.R)             do fight.deck_draw(&fight.deck)
             if rl.IsKeyPressed(.R)             do hex.board_gen_island(&fight.board, 20)
         }
 
         if rlutil.profile_begin("draw") {
             rl.BeginDrawing()
             defer rl.EndDrawing()
-            rl.ClearBackground(rl.BLACK)
+            rl.ClearBackground(rl.DARKBLUE)
 
             rl.BeginMode3D(camera)
                 draw_board(fight.board, hovered_tile)
@@ -157,18 +143,6 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
 
         if tile in fight.kingdoms_by_capital {
             rl.DrawCubeV(pos + {0, 1, 0}, 0.25, rl.GOLD)
-        }
-    }
-
-    draw_ring :: proc(center: hex.Hex, radius: int, hovered_tile: hex.Hex) {
-        assert(radius > 0, "Radius must be greater than 0")
-        tile := center + hex.DIRECTIONS[.SW] * radius // Head off in SW direction.
-        for dir in hex.Direction { // First direction is E. Continue counter-clockwise.
-            for _ in 0..<radius {
-                // draw_hexagon(tile, center, tile == hovered_tile)
-
-                tile = hex.neighbor(tile, dir)
-            }
         }
     }
 

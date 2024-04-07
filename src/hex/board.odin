@@ -2,7 +2,6 @@ package hex
 
 import "core:math/rand"
 import rl "vendor:raylib"
-import "core:mem"
 
 Board :: map[Hex]Tile
 
@@ -141,14 +140,14 @@ board_gen_island :: proc(board: ^Board, radius: int) {
                 tile.type = .Ocean
 
                 // Peninsulas and mini-islands.
-                if i >= 2 && rand.float32() < 0.4 {
+                if i >= 1 && rand.float32() > 1 / f32(i + 1) {
                     tile.type = .Sand
                 }
 
                 // Final ocean ring, neighboring ground becomes beach.
                 if i == 3 && tile.type == .Ocean do for dir in Direction {
                     nbr := neighbor(h, dir)
-                    if board[nbr].type == .Ground && rand.float32() < 0.9 {
+                    if board[nbr].type == .Ground {
                         nbr_tile := &board[nbr]
                         nbr_tile.type = .Sand
                     }
@@ -158,33 +157,35 @@ board_gen_island :: proc(board: ^Board, radius: int) {
     }
 
     gen_lake :: proc(board: ^Board, lake_center: Hex) {
-        // Lakes
         lake_tile := &board[lake_center]
-        lake_tile.type = .Lake
-        for dir in Direction {
-            nbr := neighbor(lake_center, dir)
-            nbr_tile := &board[nbr]
-            if nbr_tile.type != .Ground do continue
 
-            if rand.float32() < 0.4 {
-                nbr_tile.type = .Grass                
-                continue
-            }
+        stack := make([dynamic]Hex, context.temp_allocator)
+        visited := make(map[Hex]struct{}, 32, context.temp_allocator)
+        append(&stack, lake_center)
 
-            nbr_tile.type = .Lake
-        }
+        for len(stack) > 0 {
+            h := pop(&stack)
+            if h not_in board do continue
 
-        for h in ring(lake_center, 2) {
+            if h in visited do continue
+            visited[h] = {}
+
             tile := &board[h]
-            if tile.type != .Ground do continue
+            if tile.type != .Ground && tile.type != .Grass do continue
+            tile.type = .Lake
 
+
+            dist := distance(h, lake_center)
             for dir in Direction {
-                nbr_tile := board[neighbor(h, dir)]
-                if nbr_tile.type != .Lake do continue
-                tile.type = .Grass
-                break
+                nbr := neighbor(h, dir)
+                nbr_tile := &board[nbr]
+                if nbr_tile.type == .Ground do nbr_tile.type = .Grass
+                if rand.float32() > f32(dist) / 3 {
+                    append(&stack, nbr)
+                }
             }
         }
+
     }
 
     dir := rand.choice_enum(Direction)
