@@ -8,7 +8,7 @@ Board :: map[Hex]Tile
 
 TileType :: enum u8 {
     Ground, Ocean, Lake, River,
-    Sand,
+    Sand, Grass,
 }
 Tile :: struct{
     type: TileType,
@@ -53,6 +53,7 @@ TILE_COLORS := [TileType]rl.Color{
     .River  = rl.SKYBLUE,
 
     .Sand   = rl.GOLD,
+    .Grass  = rl.GREEN,
 }
 
 board_gen_kingdoms :: proc(board: ^Board, kingdoms: ^KingdomsByCapital) {
@@ -119,7 +120,7 @@ board_kingdom_color :: proc(board: Board, kingdoms: KingdomsByCapital, h: Hex) -
 board_gen_island :: proc(board: ^Board, radius: int) {
     board_gen_hexagon(board, radius)
 
-    ring :: proc(center: Hex, radius: int, alloc: mem.Allocator) -> [dynamic]Hex {
+    ring :: proc(center: Hex, radius: int, alloc := context.temp_allocator) -> [dynamic]Hex {
         list := make([dynamic]Hex, alloc)
         h := center + DIRECTIONS[.SW] * radius
         for dir in Direction {
@@ -135,7 +136,7 @@ board_gen_island :: proc(board: ^Board, radius: int) {
     {
         // Ocean perimeter.
         for i in 0..=3 {
-            for h in ring(0, radius - i, context.temp_allocator) {
+            for h in ring(0, radius - i) {
                 tile := &board[h]
                 tile.type = .Ocean
 
@@ -156,9 +157,42 @@ board_gen_island :: proc(board: ^Board, radius: int) {
         }
     }
 
-    {
+    gen_lake :: proc(board: ^Board, lake_center: Hex) {
         // Lakes
+        lake_tile := &board[lake_center]
+        lake_tile.type = .Lake
+        for dir in Direction {
+            nbr := neighbor(lake_center, dir)
+            nbr_tile := &board[nbr]
+            if nbr_tile.type != .Ground do continue
 
+            if rand.float32() < 0.4 {
+                nbr_tile.type = .Grass                
+                continue
+            }
 
+            nbr_tile.type = .Lake
+        }
+
+        for h in ring(lake_center, 2) {
+            tile := &board[h]
+            if tile.type != .Ground do continue
+
+            for dir in Direction {
+                nbr_tile := board[neighbor(h, dir)]
+                if nbr_tile.type != .Lake do continue
+                tile.type = .Grass
+                break
+            }
+        }
     }
+
+    dir := rand.choice_enum(Direction)
+    dist := rand.int_max(radius - 9) + 3
+    lake_center := dist * DIRECTIONS[dir]
+    gen_lake(board, lake_center)
+
+    dist = rand.int_max(radius - 9) + 3
+    lake_center = dist * -DIRECTIONS[dir]
+    gen_lake(board, lake_center)
 }

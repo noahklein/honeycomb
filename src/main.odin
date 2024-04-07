@@ -44,7 +44,6 @@ main :: proc() {
     rl.SetConfigFlags({.VSYNC_HINT, .MSAA_4X_HINT })
     rl.InitWindow(1600, 900, "Honeycomb")
     defer rl.CloseWindow()
-    rl.SetTargetFPS(60)
 
     rl.rlSetLineWidth(4)
     rl.rlEnableSmoothLines()
@@ -182,7 +181,7 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
         point := hex.hex_to_world(center_tile)
         pos := rl.Vector3{point.x, 0, point.y}
 
-        rl.DrawCapsule(pos + {0, 1.2, 0}, pos + {0, 2, 0}, 0.5, 16, 4, rl.BROWN)
+        rl.DrawCapsule(pos + {0, 1.2, 0}, pos + {0, 2, 0}, 0.5, 16, 4, rl.BEIGE)
     }
 }
 
