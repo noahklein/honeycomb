@@ -2,11 +2,13 @@ package hex
 
 import "core:math/rand"
 import rl "vendor:raylib"
+import "core:mem"
 
 Board :: map[Hex]Tile
 
 TileType :: enum u8 {
-    Ground, Water,
+    Ground, Ocean, Lake, River,
+    Sand,
 }
 Tile :: struct{
     type: TileType,
@@ -44,18 +46,13 @@ board_gen_hexagon :: proc(board: ^Board, radius: int) {
     }
 }
 
-board_randomize :: proc(m: ^Board) {
-    for h, &tile in m do if h != 0 {
-        switch rand.float32() {
-            case 0..<0.7: tile.type = .Ground
-            case:         tile.type = .Water
-        }
-    }
-}
-
 TILE_COLORS := [TileType]rl.Color{
     .Ground = rl.BROWN,
-    .Water  = rl.BLUE,
+    .Ocean  = rl.DARKBLUE,
+    .Lake   = rl.BLUE,
+    .River  = rl.SKYBLUE,
+
+    .Sand   = rl.GOLD,
 }
 
 board_gen_kingdoms :: proc(board: ^Board, kingdoms: ^KingdomsByCapital) {
@@ -117,4 +114,51 @@ board_gen_kingdoms :: proc(board: ^Board, kingdoms: ^KingdomsByCapital) {
 board_kingdom_color :: proc(board: Board, kingdoms: KingdomsByCapital, h: Hex) -> rl.Color {
     capital := board[h].capital
     return kingdoms[capital].color
+}
+
+board_gen_island :: proc(board: ^Board, radius: int) {
+    board_gen_hexagon(board, radius)
+
+    ring :: proc(center: Hex, radius: int, alloc: mem.Allocator) -> [dynamic]Hex {
+        list := make([dynamic]Hex, alloc)
+        h := center + DIRECTIONS[.SW] * radius
+        for dir in Direction {
+            for _ in 0..<radius {
+                append(&list, h)
+                h = neighbor(h, dir)
+            }
+        }
+
+        return list
+    }
+
+    {
+        // Ocean perimeter.
+        for i in 0..=3 {
+            for h in ring(0, radius - i, context.temp_allocator) {
+                tile := &board[h]
+                tile.type = .Ocean
+
+                // Peninsulas and mini-islands.
+                if i >= 2 && rand.float32() < 0.4 {
+                    tile.type = .Sand
+                }
+
+                // Final ocean ring, neighboring ground becomes beach.
+                if i == 3 && tile.type == .Ocean do for dir in Direction {
+                    nbr := neighbor(h, dir)
+                    if board[nbr].type == .Ground && rand.float32() < 0.9 {
+                        nbr_tile := &board[nbr]
+                        nbr_tile.type = .Sand
+                    }
+                }
+            }
+        }
+    }
+
+    {
+        // Lakes
+
+
+    }
 }

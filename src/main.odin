@@ -118,7 +118,8 @@ main :: proc() {
 
             if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
             if rl.IsKeyPressed(.SPACE)         do fight.end_turn()
-            if rl.IsKeyPressed(.R)             do fight.deck_draw(&fight.deck)
+            // if rl.IsKeyPressed(.R)             do fight.deck_draw(&fight.deck)
+            if rl.IsKeyPressed(.R)             do hex.board_gen_island(&fight.board, 20)
         }
 
         if rlutil.profile_begin("draw") {
@@ -139,22 +140,21 @@ main :: proc() {
 draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
     DRAW_RADIUS :: 4
 
-    draw_hexagon :: proc(tile, center_tile: hex.Hex, hovered: bool) {
+    draw_hexagon :: proc(tile: hex.Hex, color: rl.Color, hovered: bool) {
         RADIUS :: 1
         HEIGHT :: 1
 
         point := hex.hex_to_world(tile)
         pos := rl.Vector3{point.x, 0, point.y}
-        color := hex.board_kingdom_color(fight.board, fight.kingdoms_by_capital, tile)
+
+        color := color
         if hovered {
             color = ngui.lerp_color(color, rl.WHITE, 0.5)
         }
 
-        distance := hex.distance(tile, center_tile)
-        pos.y -= f32(distance) * hex_height_offset
         // @TODO: Slow; load model and do instanced rendering.
         rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
-        rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
+        // rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
 
         if tile in fight.kingdoms_by_capital {
             rl.DrawCubeV(pos + {0, 1, 0}, 0.25, rl.GOLD)
@@ -166,19 +166,16 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
         tile := center + hex.DIRECTIONS[.SW] * radius // Head off in SW direction.
         for dir in hex.Direction { // First direction is E. Continue counter-clockwise.
             for _ in 0..<radius {
-                draw_hexagon(tile, center_tile, tile == hovered_tile)
+                // draw_hexagon(tile, center, tile == hovered_tile)
 
                 tile = hex.neighbor(tile, dir)
             }
         }
     }
 
-    // Hexes spiraling out from the center.
-    for radius in 1..<DRAW_RADIUS {
-        draw_ring(center_tile, radius, hovered)
+    for h, tile in hex_board {
+        draw_hexagon(h, hex.TILE_COLORS[tile.type], h == hovered)
     }
-
-    draw_hexagon(center_tile, center_tile, center_tile == hovered)
 
     {
         // Draw player.
@@ -188,7 +185,6 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
         rl.DrawCapsule(pos + {0, 1.2, 0}, pos + {0, 2, 0}, 0.5, 16, 4, rl.BROWN)
     }
 }
-
 
 camera_movement :: proc(camera: ^rl.Camera, dt: f32) {
     MOVE ::  10

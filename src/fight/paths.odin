@@ -37,7 +37,7 @@ legal_moves :: proc(board: hex.Board, fighter_id: int) {
             if neighbor in paths.legal {
                 continue
             }
-            if neighbor not_in board || board[neighbor].type == .Water {
+            if neighbor not_in board {
                 continue
             }
 
