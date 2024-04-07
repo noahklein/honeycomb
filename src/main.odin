@@ -140,10 +140,6 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
         // @TODO: Slow; load model and do instanced rendering.
         rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
         // rl.DrawCylinderWires(pos, RADIUS, RADIUS, HEIGHT, 6, rl.WHITE)
-
-        if tile in fight.kingdoms_by_capital {
-            rl.DrawCubeV(pos + {0, 1, 0}, 0.25, rl.GOLD)
-        }
     }
 
     for h, tile in hex_board {

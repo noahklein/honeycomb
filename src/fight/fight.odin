@@ -4,7 +4,6 @@ import "core:container/queue"
 import "../hex"
 
 board: hex.Board
-kingdoms_by_capital: hex.KingdomsByCapital
 side_to_move: Team
 fighters: [dynamic]Fighter
 active_fighter: int
@@ -29,7 +28,6 @@ init :: proc() {
 deinit :: proc() {
     delete(fighters)
     delete(board)
-    delete(kingdoms_by_capital)
 
     delete(paths.legal)
     delete(paths.came_from)
