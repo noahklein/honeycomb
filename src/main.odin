@@ -14,8 +14,6 @@ import "rlutil"
 camera: rl.Camera
 timescale: f32 = 1
 
-center_tile: hex.Hex
-
 main :: proc() {
     when ODIN_DEBUG {
         track: mem.Tracking_Allocator
@@ -68,6 +66,12 @@ main :: proc() {
         fight.Fighter{ team = .Red,  hex = hex.hex( 4,  3), moves_remaining = fight.MOVES },
     )
 
+    shader_watch, shader_err := rlutil.shader_load("assets/shaders/terrain.glsl")
+    if shader_err != nil { 
+        fmt.eprintfln("Failed to load shader %q: %v", "terrain.glsl", shader_err)
+        return
+    }
+
     ngui.init()
     defer ngui.deinit()
 
@@ -96,10 +100,6 @@ main :: proc() {
                 if hovered_tile != hovered {
                     hovered_tile = hovered
                 }
-
-                if rl.IsMouseButtonDown(.LEFT) {
-                    center_tile = hovered
-                }
             }
 
             if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
@@ -113,11 +113,17 @@ main :: proc() {
             rl.ClearBackground(rl.DARKBLUE)
 
             rl.BeginMode3D(camera)
+            if rlutil.shader_begin(shader_watch) {
                 draw_board(fight.board, hovered_tile)
+            }
             rl.EndMode3D()
 
             fight.draw_cards_ui(fight.deck)
             draw_gui(&camera)
+        }
+
+        when ODIN_DEBUG {
+            rlutil.shader_watch(&shader_watch)
         }
     }
 }
@@ -144,14 +150,6 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
 
     for h, tile in hex_board {
         draw_hexagon(h, hex.TILE_COLORS[tile.type], h == hovered)
-    }
-
-    {
-        // Draw player.
-        point := hex.hex_to_world(center_tile)
-        pos := rl.Vector3{point.x, 0, point.y}
-
-        rl.DrawCapsule(pos + {0, 1.2, 0}, pos + {0, 2, 0}, 0.5, 16, 4, rl.BEIGE)
     }
 }
 

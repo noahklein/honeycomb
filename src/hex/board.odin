@@ -1,6 +1,7 @@
 package hex
 
 import "core:math/rand"
+import "core:math/noise"
 import rl "vendor:raylib"
 
 Board :: map[Hex]Tile
@@ -89,8 +90,6 @@ board_gen_island :: proc(board: ^Board, radius: int) {
     }
 
     gen_lake :: proc(board: ^Board, lake_center: Hex) {
-        lake_tile := &board[lake_center]
-
         stack := make([dynamic]Hex, context.temp_allocator)
         visited := make(map[Hex]struct{}, 32, context.temp_allocator)
         append(&stack, lake_center)
@@ -122,10 +121,60 @@ board_gen_island :: proc(board: ^Board, radius: int) {
 
     dir := rand.choice_enum(Direction)
     dist := rand.int_max(radius - 9) + 3
-    lake_center := dist * DIRECTIONS[dir]
-    gen_lake(board, lake_center)
+    lake_a_center := dist * DIRECTIONS[dir]
+    // gen_lake(board, lake_a_center)
 
     dist = rand.int_max(radius - 9) + 3
-    lake_center = dist * -DIRECTIONS[dir]
-    gen_lake(board, lake_center)
+    lake_b_center := dist * -DIRECTIONS[dir]
+    // gen_lake(board, lake_b_center)
+
+    count_neighbors :: proc(board: Board, h: Hex, type: TileType) -> (count: int) {
+        for dir in Direction {
+            if nbr := neighbor(h, dir); board[nbr].type == type {
+                count += 1
+            }
+        }
+        return
+    }
+
+    // gen_river(board, lake_a_center)
+    // gen_river(board, lake_b_center)
+
+
+    gen_river :: proc(board: ^Board, lake_center: Hex) {
+        // Prefer to go straight if possible.
+
+        dir := rand.choice_enum(Direction)
+        tile := neighbor(lake_center, dir)
+        for i in 0..<40 {
+            defer tile = neighbor(tile, dir)
+            if tile not_in board {
+                break
+            }
+
+            switch rand.float32() {
+                case 0.00..<0.10: dir = clockwise(dir)
+                case 0.10..<0.20: dir = counterclockwise(dir)
+            }
+
+            #partial switch board[tile].type {
+                case .Ocean: break
+                case .Lake, .River: continue
+                case .Ground, .Grass, .Sand:
+                    t := &board[tile]
+                    t.type = .River
+            }
+
+            // Irrigate neighbors.
+            for nbr_dir in Direction do if nbr_dir != dir {
+                nbr := neighbor(tile, nbr_dir) 
+                if nbr not_in board do continue
+
+                nbr_tile := &board[nbr]
+                #partial switch nbr_tile.type {
+                    case .Ground, .Sand, .Ocean: nbr_tile.type = .Grass
+                }
+            }
+        }
+    }
 }

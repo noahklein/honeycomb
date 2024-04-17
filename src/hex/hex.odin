@@ -15,6 +15,15 @@ DIRECTIONS := [Direction]Hex{
 direction :: #force_inline proc(dir: Direction) -> Hex { return DIRECTIONS[dir] }
 
 @(require_results)
+clockwise :: #force_inline proc(dir: Direction) -> Direction {
+    return Direction((int(dir) + 5) % 6)
+}
+@(require_results)
+counterclockwise :: #force_inline proc(dir: Direction) -> Direction {
+    return Direction((int(dir) + 1) % 6)
+}
+
+@(require_results)
 hex :: proc(q, r: int) -> Hex {
     return Hex{q, r, -q-r}
 }
