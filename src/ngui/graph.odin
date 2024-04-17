@@ -57,7 +57,7 @@ graph_draw_rect :: proc(graph: Graph, rect: rl.Rectangle) {
     hover := hovered(line_rect)
     rl.DrawRectangleRec(line_rect, dark_color(hover, false))
 
-    for line_label, line in graph.lines {
+    for _, line in graph.lines {
         inv_line_length := f32(1) / f32(len(line.points))
         for i in 0..<len(line.points)-1 {
             j := i + 1

@@ -1,7 +1,6 @@
 package hex
 
 import "core:math/rand"
-import "core:math/noise"
 import rl "vendor:raylib"
 
 Board :: map[Hex]Tile
@@ -119,13 +118,13 @@ board_gen_island :: proc(board: ^Board, radius: int) {
 
     }
 
-    dir := rand.choice_enum(Direction)
-    dist := rand.int_max(radius - 9) + 3
-    lake_a_center := dist * DIRECTIONS[dir]
+    // dir := rand.choice_enum(Direction)
+    // dist := rand.int_max(radius - 9) + 3
+    // lake_a_center := dist * DIRECTIONS[dir]
     // gen_lake(board, lake_a_center)
 
-    dist = rand.int_max(radius - 9) + 3
-    lake_b_center := dist * -DIRECTIONS[dir]
+    // dist = rand.int_max(radius - 9) + 3
+    // lake_b_center := dist * -DIRECTIONS[dir]
     // gen_lake(board, lake_b_center)
 
     count_neighbors :: proc(board: Board, h: Hex, type: TileType) -> (count: int) {
@@ -146,7 +145,7 @@ board_gen_island :: proc(board: ^Board, radius: int) {
 
         dir := rand.choice_enum(Direction)
         tile := neighbor(lake_center, dir)
-        for i in 0..<40 {
+        for _ in 0..<40 {
             defer tile = neighbor(tile, dir)
             if tile not_in board {
                 break
