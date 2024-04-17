@@ -21,10 +21,15 @@ void main() {
 #type fragment
 #version 330 core
 
+in vec2 fragTexCoord;
 in vec4 fragColor;
+
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
 
 out vec4 finalColor;
 
 void main() {
-    finalColor = fragColor;
+    vec4 texelColor = fragColor * texture(texture0, fragTexCoord);
+    finalColor = texelColor*colDiffuse;
 }

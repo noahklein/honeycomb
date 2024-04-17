@@ -44,12 +44,12 @@ shader_load :: proc(filename: string) -> (ShaderWatch, ShaderError) {
 
 
 @(deferred_none=shader_end)
-shader_begin :: proc(sw: ShaderWatch) -> bool {
+shader_begin :: #force_inline proc(sw: ShaderWatch) -> bool {
 	rl.BeginShaderMode(sw.shader)
 	return true
 }
 
-shader_end :: proc() { rl.EndShaderMode() }
+shader_end :: #force_inline proc() { rl.EndShaderMode() }
 
 @(private="file")
 Preprocess :: struct {

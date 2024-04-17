@@ -12,7 +12,6 @@ out vec2 fragTexCoord;
 out vec4 fragColor;
 
 out vec3 vPos;
-out vec4 vColor;
 
 void main() {
     fragTexCoord = vertexTexCoord;
@@ -27,10 +26,15 @@ void main() {
 #version 330 core
 
 in vec3 vPos;
+in vec2 fragTexCoord;
 in vec4 fragColor;
+
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
 
 out vec4 finalColor;
 
 void main() {
-    finalColor = fragColor;
+    vec4 texelColor = fragColor * texture(texture0, fragTexCoord);
+    finalColor = texelColor*colDiffuse;
 }
