@@ -3,6 +3,8 @@ package main
 import "core:fmt"
 import "core:mem"
 
+import "core:math"
+
 import rl "vendor:raylib"
 
 import "fight"
@@ -77,6 +79,8 @@ main :: proc() {
     rlutil.profile_init(2)
     defer rlutil.profile_deinit()
 
+    pie_menu_tile := hex.Hex(1e16)
+
      for !rl.WindowShouldClose() {
         defer free_all(context.temp_allocator)
 
@@ -104,6 +108,10 @@ main :: proc() {
             if rl.IsMouseButtonPressed(.RIGHT) do fight.deselect_fighter()
             if rl.IsKeyPressed(.SPACE)         do fight.end_turn()
             if rl.IsKeyPressed(.R)             do hex.board_gen_island(&fight.board, 20)
+
+            if rl.IsMouseButtonPressed(.LEFT) && hovered_tile in fight.board {
+                pie_menu_tile = hovered_tile
+            }
         }
 
         if rlutil.profile_begin("draw") {
@@ -113,9 +121,20 @@ main :: proc() {
 
             rl.BeginMode3D(camera)
             if rlutil.shader_begin(shader_watch) {
-                draw_board(fight.board, hovered_tile)
+                draw_board(fight.board, hovered_tile, pie_menu_tile)
             }
             rl.EndMode3D()
+
+            if pie_menu_tile in fight.board {
+                world := hex.hex_to_world(pie_menu_tile)
+                pos := rl.Vector3{world.x, 2, world.y}
+                screen := rl.GetWorldToScreen(pos, camera)
+
+                for angle := f32(0); angle < math.TAU; angle += math.TAU / 6 {
+                    offset := rl.Vector2{math.cos(angle), math.sin(angle)}
+                    rl.DrawCircleV(screen + offset * 50, 20, rl.BLUE)
+                }
+            }
 
             fight.draw_cards_ui(fight.deck)
             draw_gui(&camera)
@@ -127,10 +146,10 @@ main :: proc() {
     }
 }
 
-draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
+draw_board :: proc(hex_board: hex.Board, hovered, selected: hex.Hex) {
     DRAW_RADIUS :: 4
 
-    draw_hexagon :: proc(tile: hex.Hex, color: rl.Color, hovered: bool) {
+    draw_hexagon :: proc(tile: hex.Hex, color: rl.Color, hovered, selected: bool) {
         RADIUS :: 1
         HEIGHT :: 1
 
@@ -141,6 +160,9 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
         if hovered {
             color = ngui.lerp_color(color, rl.WHITE, 0.5)
         }
+        if selected {
+            color = ngui.lerp_color(color, rl.WHITE, 0.33)
+        }
 
         // @TODO: Slow; load model and do instanced rendering.
         rl.DrawCylinder     (pos, RADIUS, RADIUS, HEIGHT, 6, color)
@@ -148,7 +170,7 @@ draw_board :: proc(hex_board: hex.Board, hovered: hex.Hex) {
     }
 
     for h, tile in hex_board {
-        draw_hexagon(h, hex.TILE_COLORS[tile.type], h == hovered)
+        draw_hexagon(h, hex.TILE_COLORS[tile.type], h == hovered, h == selected)
     }
 }
 

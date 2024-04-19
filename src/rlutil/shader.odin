@@ -23,17 +23,14 @@ ShaderError :: enum {
 	WatchFailed,
 }
 
-shader_load :: proc(filename: string) -> (ShaderWatch, ShaderError) {
+shader_load :: proc(filename: string) -> (sw: ShaderWatch, err: ShaderError) {
     context.allocator = context.temp_allocator
     file, ok := os.read_entire_file_from_filename(filename)
     if !ok {
         return {}, .ReadFile
     }
-    shader_src, err := preprocess(string(file))
-    
-    if err != nil {
-        return {}, err
-    }
+
+	shader_src := preprocess(string(file)) or_return
 
 	return {
 		path = filename,
